@@ -2,8 +2,11 @@
 #include <MD_MAX72XX.h>
 #include <MD_Parola.h>
 
+#define CH_SP1 '\x10' // 1 blank column
+
 static MD_Parola g_parola(MD_MAX72XX::FC16_HW, D0, 4);
 
+static const uint8_t SP1[] = {1, 0x00};
 static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
     'F',
     2,
@@ -95,12 +98,12 @@ static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
 
 void MAX72X_print(float co2, float temp, float humidity)
 {
-  static char g_digits[11];
+  static char g_digits[12];
 
   // snprintf(g_digits, sizeof(g_digits), "%04.0f%02.0f%02.0f", co2, temp, humidity);
-  snprintf(g_digits, sizeof(g_digits), "%04.0f%04.1f", co2, temp);
+  snprintf(g_digits, sizeof(g_digits), "%04.0f%c%04.1f", co2, CH_SP1, temp);
   // Serial.print(g_digits);
-  g_parola.displayText(g_digits, PA_CENTER, 0, 0, PA_PRINT, PA_NO_EFFECT);
+  g_parola.displayText(g_digits, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
   g_parola.displayReset();
 }
 
@@ -117,6 +120,8 @@ void MAX72X_start()
   g_parola.setCharSpacing(1);
   g_parola.displayClear();
   g_parola.setFont(fontDigits3x8);
+
+  g_parola.addChar(CH_SP1, (uint8_t*)SP1);
 
   MAX72X_print(-1.f, -1.f, -1.f);
 }
