@@ -5,11 +5,11 @@
 
 static WiFiManager g_wm;
 
-static const char* HOSTNAME = "arduino_3";            // must match your OTA hostname
-static const int CONNECT_TIMEOUT_S = 15;              // seconds
-static const int CONFIG_PORTAL_TIMEOUT_S = 300;       // seconds
-static const char* SETUP_AP_NAME = "arduino_3_setup"; // captive portal SSID
-static const char* SETUP_AP_PASS = "12345678";        // captive portal password
+static const char* HOSTNAME = "sensor_co2_1";            // must match your OTA hostname
+static const int CONNECT_TIMEOUT_S = 15;                 // seconds
+static const int CONFIG_PORTAL_TIMEOUT_S = 300;          // seconds
+static const char* SETUP_AP_NAME = "sensor_co2_1_setup"; // captive portal SSID
+static const char* SETUP_AP_PASS = "12345678";           // captive portal password
 
 const char* get_hostname()
 {
