@@ -13,7 +13,7 @@
   --text-inverse: #fff;
 
   --accent: 342 72% 56%;
-  --accent-2: 336 78% 52%;
+  --accent-deep: 336 78% 52%;
   --danger: 350 90% 58%;
   --danger-deep: 350 70% 18%;
 
@@ -94,7 +94,7 @@ h2 {
     linear-gradient(180deg, hsl(0 0% 100% / 0.02), transparent),
     radial-gradient(
       600px 300px at 100% -50%,
-      hsl(var(--accent-2) / 0.05),
+      hsl(var(--accent-deep) / 0.05),
       transparent 60%
     ),
     var(--panel);
@@ -107,9 +107,9 @@ h2 {
   inset: -1px;
   pointer-events: none;
   border-radius: var(--radius);
-  border: 1px solid hsl(var(--accent-2) / 0.16);
+  border: 1px solid hsl(var(--accent-deep) / 0.16);
   box-shadow:
-    0 0 0.8rem hsl(var(--accent-2) / 0.22),
+    0 0 0.8rem hsl(var(--accent-deep) / 0.22),
     0 0 0.25rem hsl(var(--accent) / 0.3) inset;
 }
 
@@ -136,7 +136,7 @@ h2 {
   background: linear-gradient(
     90deg,
     transparent,
-    hsl(var(--accent-2) / 0.45),
+    hsl(var(--accent-deep) / 0.45),
     transparent
   );
 }
@@ -231,27 +231,42 @@ tr:last-child td {
 
 /* 2) danger action */
 .btn-accent {
-  border-color: hsl(var(--danger) / 0.55);
-  color: hsl(var(--danger) / 0.9);
-  background: linear-gradient(180deg, hsl(var(--danger-deep) / 0.5), transparent);
-  box-shadow: inset 0 0 0.6rem hsl(var(--danger) / 0.18);
+  border-color: hsl(var(--danger) / 0.68);
+  color: var(--text-inverse);
+  background: linear-gradient(
+    180deg,
+    hsl(var(--danger) / 0.32),
+    hsl(var(--danger-deep) / 0.82)
+  );
+  box-shadow:
+    inset 0 0 0.7rem hsl(var(--danger) / 0.24),
+    0 0 0.55rem hsl(var(--danger) / 0.14);
 }
 
 .btn-accent:hover:not(:disabled) {
-  border-color: hsl(var(--danger) / 0.78);
+  border-color: hsl(var(--danger) / 0.86);
   box-shadow:
-    inset 0 0 0.6rem hsl(var(--danger) / 0.24),
-    0 0 0.6rem hsl(var(--danger) / 0.15);
-  filter: none;
+    inset 0 0 0.8rem hsl(var(--danger) / 0.3),
+    0 0 0.8rem hsl(var(--danger) / 0.22),
+    0 8px 16px hsl(225 18% 2% / 0.6);
+  filter: brightness(1.03);
+}
+
+.btn-accent:active:not(:disabled) {
+  filter: brightness(1.06);
 }
 
 /* 3) primary action */
 .btn-primary {
   border-color: hsl(var(--accent) / 0.5);
   color: var(--text-inverse);
-  background: linear-gradient(180deg, hsl(var(--accent)), hsl(var(--accent-2)));
+  background: linear-gradient(
+    180deg,
+    hsl(var(--accent) / 0.9),
+    hsl(var(--accent-deep) / 0.88)
+  );
   box-shadow:
-    0 0 0.5rem hsl(var(--accent-2) / 0.22),
+    0 0 0.5rem hsl(var(--accent-deep) / 0.22),
     0 6px 14px hsl(225 18% 2% / 0.55);
 }
 
@@ -369,7 +384,11 @@ tr:last-child td {
 .progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, hsl(var(--accent)), hsl(var(--accent-2)));
+  background: linear-gradient(
+    90deg,
+    hsl(var(--accent)),
+    hsl(var(--accent-deep))
+  );
   transition: width 0.15s ease;
 }
 

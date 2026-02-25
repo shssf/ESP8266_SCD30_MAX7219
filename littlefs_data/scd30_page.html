@@ -1,282 +1,281 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SCD30 - CO2 / Temperature / Humidity</title>
     <link rel="stylesheet" href="/style.css" />
-  </head>
+</head>
 
-  <body>
+<body>
     <div class="container">
-      <h1>SCD30 - live</h1>
+        <h1>SCD30 - live</h1>
 
-      <div class="action-row">
-        <form action="/" method="get">
-          <button class="btn btn-default" type="submit">Back</button>
-        </form>
-      </div>
-
-      <div class="sep"></div>
-
-      <div class="card">
-        <div class="section-title">Sensor feed</div>
-        <p><a class="mono" href="/api/scd30">/api/scd30</a></p>
-        <p><span id="co2_level" class="pill">CO₂ level: --</span></p>
-      </div>
-
-      <div class="columns">
-        <div class="card">
-          <div class="section-title">CO₂</div>
-          <div class="metric">
-            <span id="co2" class="value mono">--</span
-            ><span class="unit">ppm</span>
-          </div>
+        <div class="action-row">
+            <form action="/" method="get">
+                <button class="btn btn-default" type="submit">Back</button>
+            </form>
         </div>
-        <div class="card">
-          <div class="section-title">Temperature</div>
-          <div class="metric">
-            <span id="t" class="value mono">--</span
-            ><span class="unit">°C</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="section-title">Humidity</div>
-          <div class="metric">
-            <span id="rh" class="value mono">--</span
-            ><span class="unit">%</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="card">
-        <h2>Charts</h2>
+        <div class="sep"></div>
+
+        <div class="card">
+            <div class="section-title">Sensor feed</div>
+            <p><a class="mono" href="/api/scd30">/api/scd30</a></p>
+            <p><span id="co2_level" class="pill">CO₂ level: --</span></p>
+        </div>
+
         <div class="columns">
-          <div class="card">
-            <div class="hint">CO₂ (ppm)</div>
-            <canvas id="chart_co2" width="600" height="200"></canvas>
-          </div>
-          <div class="card">
-            <div class="hint">Temperature (°C)</div>
-            <canvas id="chart_t" width="600" height="200"></canvas>
-          </div>
-          <div class="card">
-            <div class="hint">Humidity (%)</div>
-            <canvas id="chart_rh" width="600" height="200"></canvas>
-          </div>
+            <div class="card">
+                <div class="section-title">CO₂</div>
+                <div class="metric">
+                    <span id="co2" class="value mono">--</span><span class="unit">ppm</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-title">Temperature</div>
+                <div class="metric">
+                    <span id="t" class="value mono">--</span><span class="unit">°C</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-title">Humidity</div>
+                <div class="metric">
+                    <span id="rh" class="value mono">--</span><span class="unit">%</span>
+                </div>
+            </div>
         </div>
-        <p class="hint">Last 300 samples shown; responsive width.</p>
-      </div>
 
-      <script>
-        (function () {
-          var elCo2 = document.getElementById("co2");
-          var elT = document.getElementById("t");
-          var elRH = document.getElementById("rh");
-          var cCO2 = document.getElementById("chart_co2");
-          var cT = document.getElementById("chart_t");
-          var cRH = document.getElementById("chart_rh");
-          var ctxCO2 = cCO2.getContext("2d");
-          var ctxT = cT.getContext("2d");
-          var ctxRH = cRH.getContext("2d");
-          var co2Level = document.getElementById("co2_level");
-          var MAX_POINTS = 300;
-          var dataCO2 = [];
-          var dataT = [];
-          var dataRH = [];
-          var sampleTick = 0;
+        <div class="card">
+            <h2>Charts</h2>
+            <div class="columns">
+                <div class="card">
+                    <div class="hint">CO₂ (ppm)</div>
+                    <canvas id="chart_co2" width="600" height="200"></canvas>
+                </div>
+                <div class="card">
+                    <div class="hint">Temperature (°C)</div>
+                    <canvas id="chart_t" width="600" height="200"></canvas>
+                </div>
+                <div class="card">
+                    <div class="hint">Humidity (%)</div>
+                    <canvas id="chart_rh" width="600" height="200"></canvas>
+                </div>
+            </div>
+            <p class="hint">Last 300 samples shown; responsive width.</p>
+        </div>
 
-          function pushValue(arr, value) {
-            arr.push(value);
-            if (arr.length > MAX_POINTS) arr.shift();
-          }
+        <script>
+            (function () {
+                var elCo2 = document.getElementById("co2");
+                var elT = document.getElementById("t");
+                var elRH = document.getElementById("rh");
+                var cCO2 = document.getElementById("chart_co2");
+                var cT = document.getElementById("chart_t");
+                var cRH = document.getElementById("chart_rh");
+                var ctxCO2 = cCO2.getContext("2d");
+                var ctxT = cT.getContext("2d");
+                var ctxRH = cRH.getContext("2d");
+                var co2Level = document.getElementById("co2_level");
+                var MAX_POINTS = 300;
+                var dataCO2 = [];
+                var dataT = [];
+                var dataRH = [];
+                var sampleTick = 0;
 
-          function setCo2Pill(el, ppm) {
-            el.className = "pill";
-            if (ppm >= 1400) {
-              el.classList.add("bad");
-              el.textContent = "Bad • " + (ppm | 0) + " ppm";
-              return;
-            }
-            if (ppm >= 1000) {
-              el.classList.add("warn");
-              el.textContent = "Caution • " + (ppm | 0) + " ppm";
-              return;
-            }
-            el.classList.add("ok");
-            el.textContent = "Good • " + (ppm | 0) + " ppm";
-          }
+                function pushValue(arr, value) {
+                    arr.push(value);
+                    if (arr.length > MAX_POINTS) arr.shift();
+                }
 
-          function draw(ctx, data, colorA, colorB, label) {
-            var W = ctx.canvas.width,
-              H = ctx.canvas.height;
-            var L = 48,
-              R = 14,
-              T = 18,
-              B = 28;
-            ctx.clearRect(0, 0, W, H);
+                function setCo2Pill(el, ppm) {
+                    el.className = "pill";
+                    if (ppm >= 1400) {
+                        el.classList.add("bad");
+                        el.textContent = "Bad • " + (ppm | 0) + " ppm";
+                        return;
+                    }
+                    if (ppm >= 1000) {
+                        el.classList.add("warn");
+                        el.textContent = "Caution • " + (ppm | 0) + " ppm";
+                        return;
+                    }
+                    el.classList.add("ok");
+                    el.textContent = "Good • " + (ppm | 0) + " ppm";
+                }
 
-            var mn = 1e9,
-              mx = -1e9;
-            for (var i = 0; i < data.length; ++i) {
-              var v = data[i];
-              if (v < mn) mn = v;
-              if (v > mx) mx = v;
-            }
-            if (mn === 1e9) {
-              mn = 0;
-              mx = 1;
-            }
-            var span = mx - mn;
-            if (span < 0.1) span = 0.1;
-            mn -= span * 0.1;
-            mx += span * 0.1;
+                function draw(ctx, data, colorA, colorB, label) {
+                    var W = ctx.canvas.width,
+                        H = ctx.canvas.height;
+                    var L = 48,
+                        R = 14,
+                        T = 18,
+                        B = 28;
+                    ctx.clearRect(0, 0, W, H);
 
-            ctx.strokeStyle = "#232634";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (var gx = 0; gx <= 6; ++gx) {
-              var x = L + (gx * (W - L - R)) / 6;
-              ctx.moveTo(x, T);
-              ctx.lineTo(x, H - B);
-            }
-            for (var gy = 0; gy <= 4; ++gy) {
-              var y = T + (gy * (H - T - B)) / 4;
-              ctx.moveTo(L, y);
-              ctx.lineTo(W - R, y);
-            }
-            ctx.stroke();
+                    var mn = 1e9,
+                        mx = -1e9;
+                    for (var i = 0; i < data.length; ++i) {
+                        var v = data[i];
+                        if (v < mn) mn = v;
+                        if (v > mx) mx = v;
+                    }
+                    if (mn === 1e9) {
+                        mn = 0;
+                        mx = 1;
+                    }
+                    var span = mx - mn;
+                    if (span < 0.1) span = 0.1;
+                    mn -= span * 0.1;
+                    mx += span * 0.1;
 
-            ctx.strokeStyle = "#b9beca";
-            ctx.beginPath();
-            ctx.moveTo(L, T);
-            ctx.lineTo(L, H - B);
-            ctx.lineTo(W - R, H - B);
-            ctx.stroke();
+                    ctx.strokeStyle = "#232634";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (var gx = 0; gx <= 6; ++gx) {
+                        var x = L + (gx * (W - L - R)) / 6;
+                        ctx.moveTo(x, T);
+                        ctx.lineTo(x, H - B);
+                    }
+                    for (var gy = 0; gy <= 4; ++gy) {
+                        var y = T + (gy * (H - T - B)) / 4;
+                        ctx.moveTo(L, y);
+                        ctx.lineTo(W - R, y);
+                    }
+                    ctx.stroke();
 
-            ctx.fillStyle = "#9aa0ac";
-            ctx.font = "12px system-ui";
-            ctx.textAlign = "right";
-            for (var ty = 0; ty <= 4; ++ty) {
-              var yv = T + (ty * (H - T - B)) / 4;
-              var val = mx - (ty * (mx - mn)) / 4;
-              var digs = Math.abs(val) < 10 ? 2 : 0;
-              ctx.fillText(val.toFixed(digs), L - 6, yv + 4);
-            }
+                    ctx.strokeStyle = "#b9beca";
+                    ctx.beginPath();
+                    ctx.moveTo(L, T);
+                    ctx.lineTo(L, H - B);
+                    ctx.lineTo(W - R, H - B);
+                    ctx.stroke();
 
-            ctx.textAlign = "left";
-            ctx.fillStyle = "#cfd3da";
-            ctx.fillText(label, L + 8, T + 12);
+                    ctx.fillStyle = "#9aa0ac";
+                    ctx.font = "12px system-ui";
+                    ctx.textAlign = "right";
+                    for (var ty = 0; ty <= 4; ++ty) {
+                        var yv = T + (ty * (H - T - B)) / 4;
+                        var val = mx - (ty * (mx - mn)) / 4;
+                        var digs = Math.abs(val) < 10 ? 2 : 0;
+                        ctx.fillText(val.toFixed(digs), L - 6, yv + 4);
+                    }
 
-            if (data.length === 0) return;
+                    ctx.textAlign = "left";
+                    ctx.fillStyle = "#cfd3da";
+                    ctx.fillText(label, L + 8, T + 12);
 
-            var fillGrad = ctx.createLinearGradient(0, T, 0, H - B);
-            fillGrad.addColorStop(0, colorA);
-            fillGrad.addColorStop(1, "rgba(158,193,255,0.00)");
+                    if (data.length === 0) return;
 
-            ctx.beginPath();
-            for (var i = 0; i < data.length; ++i) {
-              var px = L + (i * (W - L - R)) / Math.max(1, data.length - 1);
-              var py = T + ((mx - data[i]) * (H - T - B)) / (mx - mn);
-              if (i === 0) ctx.moveTo(px, py);
-              else ctx.lineTo(px, py);
-            }
-            ctx.lineTo(L + (W - L - R), H - B);
-            ctx.lineTo(L, H - B);
-            ctx.closePath();
-            ctx.globalAlpha = 0.16;
-            ctx.fillStyle = fillGrad;
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
+                    var fillGrad = ctx.createLinearGradient(0, T, 0, H - B);
+                    fillGrad.addColorStop(0, colorA);
+                    fillGrad.addColorStop(1, "rgba(158,193,255,0.00)");
 
-            var lineGrad = ctx.createLinearGradient(0, T, 0, H - B);
-            lineGrad.addColorStop(0, colorA);
-            lineGrad.addColorStop(1, colorB);
+                    ctx.beginPath();
+                    for (var i = 0; i < data.length; ++i) {
+                        var px = L + (i * (W - L - R)) / Math.max(1, data.length - 1);
+                        var py = T + ((mx - data[i]) * (H - T - B)) / (mx - mn);
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.lineTo(L + (W - L - R), H - B);
+                    ctx.lineTo(L, H - B);
+                    ctx.closePath();
+                    ctx.globalAlpha = 0.16;
+                    ctx.fillStyle = fillGrad;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
 
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = colorA;
-            ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            for (var j = 0; j < data.length; ++j) {
-              var lx = L + (j * (W - L - R)) / Math.max(1, data.length - 1);
-              var ly = T + ((mx - data[j]) * (H - T - B)) / (mx - mn);
-              if (j === 0) ctx.moveTo(lx, ly);
-              else ctx.lineTo(lx, ly);
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          }
+                    var lineGrad = ctx.createLinearGradient(0, T, 0, H - B);
+                    lineGrad.addColorStop(0, colorA);
+                    lineGrad.addColorStop(1, colorB);
 
-          function resize() {
-            function chartWidth(canvas) {
-              var parent = canvas.parentElement;
-              var w = (parent ? parent.clientWidth : canvas.clientWidth) - 16;
-              if (w < 320) w = 320;
-              if (w > 1200) w = 1200;
-              return w;
-            }
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = colorA;
+                    ctx.strokeStyle = lineGrad;
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    for (var j = 0; j < data.length; ++j) {
+                        var lx = L + (j * (W - L - R)) / Math.max(1, data.length - 1);
+                        var ly = T + ((mx - data[j]) * (H - T - B)) / (mx - mn);
+                        if (j === 0) ctx.moveTo(lx, ly);
+                        else ctx.lineTo(lx, ly);
+                    }
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
 
-            cCO2.width = chartWidth(cCO2);
-            cCO2.height = 200;
-            cT.width = chartWidth(cT);
-            cT.height = 200;
-            cRH.width = chartWidth(cRH);
-            cRH.height = 200;
+                function resize() {
+                    function chartWidth(canvas) {
+                        var parent = canvas.parentElement;
+                        var w = (parent ? parent.clientWidth : canvas.clientWidth) - 16;
+                        if (w < 320) w = 320;
+                        if (w > 1200) w = 1200;
+                        return w;
+                    }
 
-            draw(ctxCO2, dataCO2, "#ff4b6a", "#ff2f59", "CO₂ (ppm)");
-            draw(ctxT, dataT, "#b06cff", "#8f5dff", "Temperature (°C)");
-            draw(ctxRH, dataRH, "#5fd8b8", "#2fc7a4", "Humidity (%)");
-          }
+                    cCO2.width = chartWidth(cCO2);
+                    cCO2.height = 200;
+                    cT.width = chartWidth(cT);
+                    cT.height = 200;
+                    cRH.width = chartWidth(cRH);
+                    cRH.height = 200;
 
-          window.addEventListener("resize", resize);
+                    draw(ctxCO2, dataCO2, "#ff4b6a", "#ff2f59", "CO₂ (ppm)");
+                    draw(ctxT, dataT, "#b06cff", "#8f5dff", "Temperature (°C)");
+                    draw(ctxRH, dataRH, "#5fd8b8", "#2fc7a4", "Humidity (%)");
+                }
 
-          async function refresh() {
-            try {
-              var r = await fetch("/api/scd30", { cache: "no-store" });
-              if (!r.ok) throw new Error("HTTP " + r.status);
-              var j = await r.json();
+                window.addEventListener("resize", resize);
 
-              var c = j.co2_ppm !== null ? +j.co2_ppm : null;
-              var tc = j.temperature_c !== null ? +j.temperature_c : null;
-              var rh = j.humidity_pct !== null ? +j.humidity_pct : null;
+                async function refresh() {
+                    try {
+                        var r = await fetch("/api/scd30", { cache: "no-store" });
+                        if (!r.ok) throw new Error("HTTP " + r.status);
+                        var j = await r.json();
 
-              elCo2.textContent =
-                c !== null && isFinite(c) ? c.toFixed(0) : "--";
-              elT.textContent =
-                tc !== null && isFinite(tc) ? tc.toFixed(2) : "--";
-              elRH.textContent =
-                rh !== null && isFinite(rh) ? rh.toFixed(1) : "--";
+                        var c = j.co2_ppm !== null ? +j.co2_ppm : null;
+                        var tc = j.temperature_c !== null ? +j.temperature_c : null;
+                        var rh = j.humidity_pct !== null ? +j.humidity_pct : null;
 
-              if (c !== null && isFinite(c)) pushValue(dataCO2, c);
-              if (tc !== null && isFinite(tc)) pushValue(dataT, tc);
-              if (rh !== null && isFinite(rh)) pushValue(dataRH, rh);
+                        elCo2.textContent =
+                            c !== null && isFinite(c) ? c.toFixed(0) : "--";
+                        elT.textContent =
+                            tc !== null && isFinite(tc) ? tc.toFixed(2) : "--";
+                        elRH.textContent =
+                            rh !== null && isFinite(rh) ? rh.toFixed(1) : "--";
 
-              if (c !== null && isFinite(c)) {
-                setCo2Pill(co2Level, c);
-              } else {
-                co2Level.className = "pill";
-                co2Level.textContent = "CO₂ level: --";
-              }
+                        if (c !== null && isFinite(c)) pushValue(dataCO2, c);
+                        if (tc !== null && isFinite(tc)) pushValue(dataT, tc);
+                        if (rh !== null && isFinite(rh)) pushValue(dataRH, rh);
 
-              sampleTick += 1;
-              if (sampleTick % 2 === 0) {
+                        if (c !== null && isFinite(c)) {
+                            setCo2Pill(co2Level, c);
+                        } else {
+                            co2Level.className = "pill";
+                            co2Level.textContent = "CO₂ level: --";
+                        }
+
+                        sampleTick += 1;
+                        if (sampleTick % 2 === 0) {
+                            resize();
+                        }
+                    } catch (e) {
+                        elCo2.textContent = "ERR";
+                        elT.textContent = "ERR";
+                        elRH.textContent = "ERR";
+                        co2Level.className = "pill";
+                        co2Level.textContent = "CO₂ level: ERR";
+                    }
+                }
+
+                refresh();
                 resize();
-              }
-            } catch (e) {
-              elCo2.textContent = "ERR";
-              elT.textContent = "ERR";
-              elRH.textContent = "ERR";
-              co2Level.className = "pill";
-              co2Level.textContent = "CO₂ level: ERR";
-            }
-          }
-
-          refresh();
-          resize();
-          setInterval(refresh, 1000);
-        })();
-      </script>
+                setInterval(refresh, 1000);
+            })();
+        </script>
     </div>
-  </body>
+</body>
+
 </html>
