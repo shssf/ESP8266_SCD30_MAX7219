@@ -83,15 +83,7 @@ static void handleMainPage(void)
     return;
   }
 
-  String h;
-  h.reserve(512);
-  h += ui_html_head("Wemos Control");
-  h += "<h1>Main page missing</h1>";
-  h += "<div class='card'><p>Upload filesystem image with <span class='mono'>main_page.html</span> and <span "
-       "class='mono'>style.css</span>.</p></div>";
-  h += "<div><form method='GET' action='/ota'><button class='btn' type='submit'>Open OTA</button></form></div>";
-  h += ui_html_tail();
-  http_send(500, "text/html; charset=utf-8", h.c_str());
+  http_send(404, "text/plain; charset=utf-8", "main_page.html not found in LittleFS");
 }
 
 void ui_register_main_routes(void)
