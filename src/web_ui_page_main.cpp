@@ -8,6 +8,8 @@
 
 static void handleMainApi(void)
 {
+  http_send_header("Cache-Control", "no-store");
+
   const String host = String(get_hostname());
   const String ip = WiFi.localIP().toString();
   const String mac = WiFi.macAddress();
@@ -78,6 +80,7 @@ static void handleMainApi(void)
 
 static void handleMainPage(void)
 {
+  http_send_header("Cache-Control", "public, max-age=120");
   if (http_send_littlefs_file("/main_page.html", "text/html; charset=utf-8"))
   {
     return;

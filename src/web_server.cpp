@@ -162,19 +162,14 @@ void http_route_any(const char* path, HttpHandlerFn handler)
   s_server.on(path, HTTP_ANY, handler);
 }
 
-void http_set_not_found(HttpHandlerFn handler)
-{
-  s_server.onNotFound(handler);
-}
-
 void http_send(int code, const char* content_type, const char* body)
 {
   s_server.send(code, content_type, body);
 }
 
-void http_send_P(int code, const char* content_type, PGM_P content)
+void http_send_header(const char* name, const char* value)
 {
-  s_server.send_P(code, content_type, content);
+  s_server.sendHeader(name, value);
 }
 
 bool http_send_littlefs_file(const char* fs_path, const char* content_type)

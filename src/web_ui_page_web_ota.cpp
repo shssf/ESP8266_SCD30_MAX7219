@@ -2,6 +2,7 @@
 
 void handleOtaPage()
 {
+  http_send_header("Cache-Control", "public, max-age=120");
   if (http_send_littlefs_file("/ota_page.html", "text/html; charset=utf-8"))
   {
     return;

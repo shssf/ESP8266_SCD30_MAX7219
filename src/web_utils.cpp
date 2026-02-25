@@ -12,26 +12,6 @@ String ui_uptime_str()
   return String(buf);
 }
 
-String ui_html_head(const char* title)
-{
-  const char* safe_title = title ? title : "Wemos";
-  char buf[512];
-  snprintf(buf,
-           sizeof(buf),
-           "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'/>"
-           "<title>%s</title>"
-           "<link rel='stylesheet' href='/style.css'></head><body>",
-           safe_title);
-  return String(buf);
-}
-
-String ui_html_tail(void)
-{
-  char buf[32];
-  snprintf(buf, sizeof(buf), "</body></html>");
-  return String(buf);
-}
-
 void ui_json_escape_cstr(const char* input, char* out, size_t out_size)
 {
   if (out_size == 0)

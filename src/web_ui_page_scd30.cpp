@@ -7,6 +7,8 @@
 
 static void handleApiScd30(void)
 {
+  http_send_header("Cache-Control", "no-store");
+
   char json[128];
   float s_last_co2 = 0.0f;
   float s_last_t = 0.0f;
@@ -19,6 +21,7 @@ static void handleApiScd30(void)
 
 static void handleScd30Page(void)
 {
+  http_send_header("Cache-Control", "public, max-age=120");
   if (http_send_littlefs_file("/scd30_page.html", "text/html; charset=utf-8"))
   {
     return;

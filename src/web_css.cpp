@@ -4,6 +4,7 @@
 
 static void handle_css_main()
 {
+  http_send_header("Cache-Control", "public, max-age=3600");
   if (http_send_littlefs_file("/style.css", "text/css; charset=utf-8"))
   {
     return;

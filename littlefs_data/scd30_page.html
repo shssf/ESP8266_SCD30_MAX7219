@@ -68,6 +68,7 @@
             var dataCO2 = [];
             var dataT = [];
             var dataRH = [];
+            var sampleTick = 0;
 
             function pushValue(arr, value) {
                 arr.push(value);
@@ -202,7 +203,10 @@
                     if (tc !== null && isFinite(tc)) pushValue(dataT, tc);
                     if (rh !== null && isFinite(rh)) pushValue(dataRH, rh);
 
-                    resize();
+                    sampleTick += 1;
+                    if ((sampleTick % 2) === 0) {
+                        resize();
+                    }
                 } catch (e) {
                     elCo2.textContent = 'ERR';
                     elT.textContent = 'ERR';
