@@ -9,10 +9,7 @@
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial)
-  {
-    delay(50);
-  }
+  delay(50);
 
   wifi_start();
   mdns_start();

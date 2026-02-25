@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HTTP OTA</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+    <h1>HTTP OTA Update</h1>
+
+    <div class="card">
+        <table>
+            <tr>
+                <td>Status</td>
+                <td><span id="otaBadge" class="status-pill status-ready">Ready</span></td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td><span id="statusAction" class="mono">Idle</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="columns">
+        <div class="card panel">
+            <h2>Firmware image</h2>
+            <input id="fwFileInput" type="file" name="update" accept=".bin,application/octet-stream" style="color:#ddd">
+            <div class="meta">
+                <div class="hint">File: <span id="fwFileName" class="mono">none</span></div>
+                <div class="hint">Size: <span id="fwFileSize" class="mono">0 B</span></div>
+                <div class="hint">Validation: <span id="fwValidation" class="mono">Select firmware.bin</span></div>
+            </div>
+            <button id="uploadFwBtn" class="btn btn-primary" type="button" disabled>Upload firmware</button>
+        </div>
+
+        <div class="card panel">
+            <h2>Filesystem image</h2>
+            <input id="fsFileInput" type="file" name="update" accept=".bin,application/octet-stream" style="color:#ddd">
+            <div class="meta">
+                <div class="hint">File: <span id="fsFileName" class="mono">none</span></div>
+                <div class="hint">Size: <span id="fsFileSize" class="mono">0 B</span></div>
+                <div class="hint">Validation: <span id="fsValidation" class="mono">Select littlefs.bin</span></div>
+            </div>
+            <button id="uploadFsBtn" class="btn btn-primary" type="button" disabled>Upload filesystem</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <p class="hint">Naming rules: firmware must look like <span class="mono">firmware*.bin</span>; filesystem must
+            contain <span class="mono">littlefs/spiffs/fs</span> and end with <span class="mono">.bin</span>.</p>
+        <p class="hint">Auth: user <span class="mono">admin</span>, password <span class="mono">SETUP_AP_PASS</span>.
+        </p>
+        <p class="hint">If 401 appears, enter correct credentials for this page and retry upload.</p>
+        <p class="hint">Working CLI examples:</p>
+        <p class="hint mono">curl.exe -u admin:SETUP_AP_PASS -F "update=@.pio/build/d1_mini/littlefs.bin"
+            http://sensor_co2_1.local/updatefs</p>
+        <p class="hint mono">curl.exe --connect-timeout 5 --max-time 300 -u admin:SETUP_AP_PASS -F
+            "update=@.pio/build/d1_mini/firmware.bin" http://sensor_co2_1.local/update</p>
+    </div>
+
+    <div class="card" id="progressCard" style="display:none">
+        <div class="progress-title">Upload progress</div>
+        <div class="progress-wrap">
+            <div id="bar" class="progress-bar"></div>
+        </div>
+        <div id="pct" class="mono">0%</div>
+        <div id="msg" class="hint">Ready</div>
+    </div>
+
+    <div>
+        <button id="rebootBtn" class="btn btn-accent" type="button">Restart controller</button>
+        <form method="GET" action="/"><button class="btn btn-default" type="submit">Back</button></form>
+    </div>
+
+    <script>
+        (function () {
+            var fwFileInput = document.getElementById('fwFileInput');
+            var fsFileInput = document.getElementById('fsFileInput');
+            var uploadFwBtn = document.getElementById('uploadFwBtn');
+            var uploadFsBtn = document.getElementById('uploadFsBtn');
+            var rebootBtn = document.getElementById('rebootBtn');
+            var fwFileName = document.getElementById('fwFileName');
+            var fwFileSize = document.getElementById('fwFileSize');
+            var fsFileName = document.getElementById('fsFileName');
+            var fsFileSize = document.getElementById('fsFileSize');
+            var fwValidation = document.getElementById('fwValidation');
+            var fsValidation = document.getElementById('fsValidation');
+            var otaBadge = document.getElementById('otaBadge');
+            var statusAction = document.getElementById('statusAction');
+            var progressCard = document.getElementById('progressCard');
+            var bar = document.getElementById('bar');
+            var pct = document.getElementById('pct');
+            var msg = document.getElementById('msg');
+
+            function fmtBytes(v) {
+                if (v < 1024) return v + ' B';
+                if (v < 1024 * 1024) return (v / 1024).toFixed(1) + ' KB';
+                return (v / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            function setStatus(text, cls, action) {
+                otaBadge.textContent = text;
+                otaBadge.className = 'status-pill ' + cls;
+                statusAction.textContent = action || text;
+            }
+
+            function setBusy(active) {
+                rebootBtn.disabled = active;
+                if (active) {
+                    uploadFwBtn.disabled = true;
+                    uploadFsBtn.disabled = true;
+                    return;
+                }
+                applyValidationState();
+            }
+
+            function setProgress(value) {
+                var p = Math.max(0, Math.min(100, value | 0));
+                bar.style.width = p + '%';
+                pct.textContent = p + '%';
+            }
+
+            function looksLikeFirmware(name) {
+                var n = (name || '').toLowerCase();
+                return n.endsWith('.bin') && (n.indexOf('firmware') >= 0 || n.indexOf('app') >= 0 || n.indexOf('sketch') >= 0);
+            }
+
+            function looksLikeFilesystem(name) {
+                var n = (name || '').toLowerCase();
+                if (!n.endsWith('.bin')) return false;
+                return n.indexOf('littlefs') >= 0 || n.indexOf('spiffs') >= 0 || n.indexOf('fs') >= 0;
+            }
+
+            function applyValidationState() {
+                var fw = fwFileInput.files && fwFileInput.files[0];
+                var fs = fsFileInput.files && fsFileInput.files[0];
+                uploadFwBtn.disabled = !(fw && looksLikeFirmware(fw.name));
+                uploadFsBtn.disabled = !(fs && looksLikeFilesystem(fs.name));
+            }
+
+            function updateFirmwareInfo() {
+                var f = fwFileInput.files && fwFileInput.files[0];
+                if (!f) {
+                    fwFileName.textContent = 'none';
+                    fwFileSize.textContent = '0 B';
+                    fwValidation.textContent = 'Select firmware.bin';
+                    applyValidationState();
+                    return;
+                }
+                fwFileName.textContent = f.name;
+                fwFileSize.textContent = fmtBytes(f.size);
+                if (looksLikeFirmware(f.name)) {
+                    fwValidation.textContent = 'OK';
+                    setStatus('File Selected', 'status-ready', 'Firmware ready to upload');
+                } else {
+                    fwValidation.textContent = 'Invalid name for firmware';
+                    setStatus('Validation Failed', 'status-error', 'Wrong firmware filename');
+                }
+                applyValidationState();
+            }
+
+            function updateFilesystemInfo() {
+                var f = fsFileInput.files && fsFileInput.files[0];
+                if (!f) {
+                    fsFileName.textContent = 'none';
+                    fsFileSize.textContent = '0 B';
+                    fsValidation.textContent = 'Select littlefs.bin';
+                    applyValidationState();
+                    return;
+                }
+                fsFileName.textContent = f.name;
+                fsFileSize.textContent = fmtBytes(f.size);
+                if (looksLikeFilesystem(f.name)) {
+                    fsValidation.textContent = 'OK';
+                    setStatus('File Selected', 'status-ready', 'Filesystem ready to upload');
+                } else {
+                    fsValidation.textContent = 'Invalid name for filesystem';
+                    setStatus('Validation Failed', 'status-error', 'Wrong filesystem filename');
+                }
+                applyValidationState();
+            }
+
+            function upload(endpoint, label, fileInputRef) {
+                var f = fileInputRef.files && fileInputRef.files[0];
+                if (!f) { alert('Select a .bin file first'); return; }
+
+                progressCard.style.display = 'block';
+                setProgress(0);
+                setStatus('In Progress', 'status-progress', label + ' upload');
+                msg.textContent = 'Uploading ' + f.name + ' to ' + endpoint + ' ...';
+                setBusy(true);
+
+                var fd = new FormData();
+                fd.append('update', f);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', endpoint, true);
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable && e.total > 0) {
+                        setProgress(Math.round((e.loaded * 100) / e.total));
+                    }
+                };
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState !== 4) return;
+                    setBusy(false);
+                    setProgress(100);
+
+                    if (xhr.status === 200) {
+                        setStatus('Success', 'status-success', label + ' uploaded');
+                        msg.textContent = xhr.responseText || 'Update finished. Device may reboot.';
+                        return;
+                    }
+                    if (xhr.status === 401) {
+                        setStatus('Auth Required', 'status-auth', label + ' unauthorized');
+                        msg.textContent = 'Unauthorized (401). Check credentials and retry.';
+                        return;
+                    }
+                    setStatus('Error', 'status-error', label + ' failed');
+                    msg.textContent = 'Update failed: HTTP ' + xhr.status + ' ' + (xhr.responseText || '');
+                };
+                xhr.onerror = function () {
+                    setBusy(false);
+                    setStatus('Error', 'status-error', label + ' network error');
+                    msg.textContent = 'Network error during upload';
+                };
+                xhr.send(fd);
+            }
+
+            fwFileInput.addEventListener('change', updateFirmwareInfo);
+            fsFileInput.addEventListener('change', updateFilesystemInfo);
+            uploadFwBtn.addEventListener('click', function () { upload('/update', 'Firmware', fwFileInput); });
+            uploadFsBtn.addEventListener('click', function () { upload('/updatefs', 'Filesystem', fsFileInput); });
+            rebootBtn.addEventListener('click', function () {
+                setStatus('In Progress', 'status-progress', 'Manual restart');
+                setBusy(true);
+                msg.textContent = 'Sending reboot command ...';
+                fetch('/reboot', { method: 'POST' })
+                    .then(function (resp) { return resp.text().then(function (t) { return { status: resp.status, text: t }; }); })
+                    .then(function (res) {
+                        setBusy(false);
+                        if (res.status === 200) { setStatus('Rebooting', 'status-progress', 'Controller restart'); msg.textContent = res.text || 'Rebooting...'; return; }
+                        if (res.status === 401) { setStatus('Auth Required', 'status-auth', 'Reboot unauthorized'); msg.textContent = 'Unauthorized (401). Check credentials and retry.'; return; }
+                        setStatus('Error', 'status-error', 'Reboot failed');
+                        msg.textContent = 'Reboot failed: HTTP ' + res.status + ' ' + (res.text || '');
+                    })
+                    .catch(function () { setBusy(false); setStatus('Error', 'status-error', 'Reboot network error'); msg.textContent = 'Network error during reboot command'; });
+            });
+            updateFirmwareInfo();
+            updateFilesystemInfo();
+            setStatus('Ready', 'status-ready', 'Idle');
+        })();
+    </script>
+</body>
+
+</html>

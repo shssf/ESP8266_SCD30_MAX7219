@@ -16,6 +16,11 @@ const char* get_hostname()
   return HOSTNAME;
 }
 
+const char* get_setup_ap_pass()
+{
+  return SETUP_AP_PASS;
+}
+
 void wifi_forget_credentials()
 {
   g_wm.resetSettings();

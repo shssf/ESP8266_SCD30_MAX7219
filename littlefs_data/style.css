@@ -1,0 +1,179 @@
+body {
+  font-family:
+    system-ui,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  margin: 20px;
+  background: #0f1014;
+  color: #dcdfe4;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+h2 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+
+.card {
+  background: #181a1f;
+  border: 1px solid #262a33;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.45);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.meta {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #15171c;
+  border: 1px solid #262a33;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #23262f;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 14px;
+  margin: 4px;
+  border: 1px solid #3a414f;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #1f2430;
+  color: #e6e9ee;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: #283043;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #151922;
+  border-color: #2a3040;
+}
+
+.btn-primary {
+  background: #1e4fa8;
+  border-color: #2b68d0;
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #255ec4;
+}
+
+.btn-default {
+  background: #252b37;
+  border-color: #3a414f;
+}
+
+.btn-accent {
+  background: #7a3d14;
+  border-color: #9a5527;
+  color: #fff;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: #8d4b1f;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #333;
+  color: #eee;
+  font-weight: 600;
+}
+
+.status-ready {
+  background: #3e4a5f;
+}
+
+.status-progress {
+  background: #285fba;
+}
+
+.status-success {
+  background: #1f7a4a;
+}
+
+.status-error {
+  background: #b03a3a;
+}
+
+.status-auth {
+  background: #8a5b1a;
+}
+
+.mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  color: #b9d8ff;
+}
+
+.hint {
+  color: #88909b;
+  font-size: 12px;
+}
+
+.progress-title {
+  margin-bottom: 8px;
+}
+
+.progress-wrap {
+  height: 16px;
+  background: #1b1e25;
+  border: 1px solid #2b3140;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3b82f6, #22d3ee, #34d399);
+  transition: width 0.15s ease;
+}
+
+a {
+  color: #9ec1ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

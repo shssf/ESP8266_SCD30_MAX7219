@@ -6,3 +6,4 @@ bool wifi_is_connected();
 void wifi_forget_credentials();
 
 const char* get_hostname();
+const char* get_setup_ap_pass();
