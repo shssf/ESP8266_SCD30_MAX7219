@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wemos Control</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+    <h1 id="title">Wemos D1 mini + SCD30</h1>
+
+    <div class="card">
+        <table>
+            <tr>
+                <th>Action</th>
+                <th>Path</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><button class="btn btn-primary" type="button" onclick="location.href='/scd30'">SCD30</button></td>
+                <td class="mono"><a href="/scd30">/scd30</a></td>
+                <td>Temp, Hum, CO2</td>
+            </tr>
+            <tr>
+                <td><button class="btn btn-primary" type="button" onclick="location.href='/ota'">Web OTA</button></td>
+                <td class="mono"><a href="/ota">/ota</a></td>
+                <td>OTA page for firmware and filesystem upload.</td>
+            </tr>
+            <tr>
+                <td>
+                    <form method="POST" action="/reset"><button class="btn btn-accent" type="submit">RESET WiFi</button>
+                    </form>
+                </td>
+                <td class="mono">/reset</td>
+                <td>Erase saved WiFi credentials and reboot the device.</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="columns">
+        <div class="card">
+            <div class="hint">Hostname</div>
+            <div id="hostname" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">IP</div>
+            <div id="ip" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">MAC</div>
+            <div id="mac" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">WiFi</div>
+            <div id="wifi">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Chip ID</div>
+            <div id="chipId" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">CPU freq</div>
+            <div id="cpu" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Flash size</div>
+            <div id="flash" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Uptime</div>
+            <div id="uptime" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Free heap</div>
+            <div id="freeHeap" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Heap fragmentation</div>
+            <div id="heapFrag" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Max free block</div>
+            <div id="maxFreeBlock" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">LittleFS used / total</div>
+            <div id="fsUsage" class="mono">--</div>
+        </div>
+        <div class="card">
+            <div class="hint">Last reset reason</div>
+            <div id="resetReason">--</div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var title = document.getElementById('title');
+            var hostname = document.getElementById('hostname');
+            var ip = document.getElementById('ip');
+            var mac = document.getElementById('mac');
+            var wifi = document.getElementById('wifi');
+            var chipId = document.getElementById('chipId');
+            var cpu = document.getElementById('cpu');
+            var flash = document.getElementById('flash');
+            var uptime = document.getElementById('uptime');
+            var freeHeap = document.getElementById('freeHeap');
+            var heapFrag = document.getElementById('heapFrag');
+            var maxFreeBlock = document.getElementById('maxFreeBlock');
+            var fsUsage = document.getElementById('fsUsage');
+            var resetReason = document.getElementById('resetReason');
+
+            function fill(data) {
+                title.textContent = 'Wemos D1 mini + SCD30 (built ' + (data.build || '--') + ')';
+                hostname.textContent = data.hostname || '--';
+                ip.textContent = data.ip || '--';
+                mac.textContent = data.mac || '--';
+                wifi.textContent = 'SSID: ' + (data.ssid || '--') + ', RSSI: ' + (data.rssi_dbm ?? '--') + ' dBm, Channel: ' + (data.channel ?? '--');
+                chipId.textContent = data.chip_id || '--';
+                cpu.textContent = (data.cpu_mhz ?? '--') + ' MHz';
+                flash.textContent = (data.flash_size_bytes ?? '--') + ' B';
+                uptime.textContent = data.uptime || '--';
+                freeHeap.textContent = (data.free_heap_bytes ?? '--') + ' B';
+                heapFrag.textContent = (data.heap_fragmentation_pct ?? '--') + ' %';
+                maxFreeBlock.textContent = (data.max_free_block_bytes ?? '--') + ' B';
+                fsUsage.textContent = (data.fs_used_bytes ?? '--') + ' / ' + (data.fs_total_bytes ?? '--') + ' B';
+                resetReason.textContent = data.reset_reason || '--';
+            }
+
+            async function refresh() {
+                try {
+                    var response = await fetch('/api/main', { cache: 'no-store' });
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    var data = await response.json();
+                    fill(data);
+                } catch (e) {
+                    console.warn('Failed to load /api/main', e);
+                }
+            }
+
+            refresh();
+            setInterval(refresh, 2000);
+        })();
+    </script>
+</body>
+
+</html>

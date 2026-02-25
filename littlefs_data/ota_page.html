@@ -4,12 +4,19 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HTTP OTA</title>
+    <title>Firmware Update</title>
     <link rel="stylesheet" href="/style.css" />
 </head>
 
 <body>
-    <h1>HTTP OTA Update</h1>
+    <h1>Firmware update</h1>
+
+    <div>
+        <form method="GET" action="/"><button class="btn btn-default" type="submit">Back</button></form>
+    </div>
+    <div>
+        <button id="rebootBtn" class="btn btn-accent" type="button">Restart controller</button>
+    </div>
 
     <div class="card">
         <table>
@@ -70,11 +77,6 @@
         <div id="msg" class="hint">Ready</div>
     </div>
 
-    <div>
-        <button id="rebootBtn" class="btn btn-accent" type="button">Restart controller</button>
-        <form method="GET" action="/"><button class="btn btn-default" type="submit">Back</button></form>
-    </div>
-
     <script>
         (function () {
             var fwFileInput = document.getElementById('fwFileInput');
@@ -94,6 +96,7 @@
             var bar = document.getElementById('bar');
             var pct = document.getElementById('pct');
             var msg = document.getElementById('msg');
+            var isBusy = false;
 
             function fmtBytes(v) {
                 if (v < 1024) return v + ' B';
@@ -108,6 +111,7 @@
             }
 
             function setBusy(active) {
+                isBusy = !!active;
                 rebootBtn.disabled = active;
                 if (active) {
                     uploadFwBtn.disabled = true;
@@ -135,6 +139,11 @@
             }
 
             function applyValidationState() {
+                if (isBusy) {
+                    uploadFwBtn.disabled = true;
+                    uploadFsBtn.disabled = true;
+                    return;
+                }
                 var fw = fwFileInput.files && fwFileInput.files[0];
                 var fs = fsFileInput.files && fsFileInput.files[0];
                 uploadFwBtn.disabled = !(fw && looksLikeFirmware(fw.name));
@@ -184,6 +193,7 @@
             }
 
             function upload(endpoint, label, fileInputRef) {
+                if (isBusy) { return; }
                 var f = fileInputRef.files && fileInputRef.files[0];
                 if (!f) { alert('Select a .bin file first'); return; }
 
@@ -234,6 +244,7 @@
             uploadFwBtn.addEventListener('click', function () { upload('/update', 'Firmware', fwFileInput); });
             uploadFsBtn.addEventListener('click', function () { upload('/updatefs', 'Filesystem', fsFileInput); });
             rebootBtn.addEventListener('click', function () {
+                if (isBusy) { return; }
                 setStatus('In Progress', 'status-progress', 'Manual restart');
                 setBusy(true);
                 msg.textContent = 'Sending reboot command ...';
