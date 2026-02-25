@@ -5,9 +5,11 @@
 #include "web_server.h"
 #include "web_css.h"
 #include "web_ui_pages.h"
+#include "wifi_support.h"
 
 static ESP8266WebServer s_server(80);
 static ESP8266HTTPUpdateServer s_updater;
+static bool s_server_started = false;
 
 void http_start(void)
 {
@@ -15,13 +17,27 @@ void http_start(void)
   ui_ota_routes();
   ui_register_scd30_routes();
   ui_register_css_routes();
-
-  s_server.begin();
 }
 
 void http_tick(void)
 {
-  s_server.handleClient();
+  if (wifi_is_connected())
+  {
+    if (!s_server_started)
+    {
+      s_server.begin();
+      s_server_started = true;
+    }
+    s_server.handleClient();
+  }
+  else
+  {
+    if (s_server_started)
+    {
+      s_server.stop();
+      s_server_started = false;
+    }
+  }
 }
 
 /* -------- Routing -------- */

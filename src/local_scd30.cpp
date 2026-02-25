@@ -9,9 +9,10 @@ SensirionI2cScd30 sensor;
 static float co2 = -1.0f;
 static float temperature = -1.0f;
 static float humidity = -1.0f;
+static uint16_t temp_offset_c = 530; // temperature correction for -5.3 C
 
 #define MEASUREMENT_INTERVAL  30  // in seconds
-#define TEMP_OFFSET_C         130 // if you want -1.5 correction - use 150 value
+#define TEMP_OFFSET_C         530 // centi-degrees, sensor subtracts this from measured temperature (31.7 -> 26.4)
 #define AMBIENT_PRESSURE_MBAR 1010
 #define AUTOMATIC_CALIBRATION 0
 
@@ -101,8 +102,23 @@ void scd30_get_values()
   else
   {
     // apply temperature offset
-    temperature -= float(TEMP_OFFSET_C) / 100.0f;
+    // temperature -= float(TEMP_OFFSET_C) / 100.0f;
   }
+}
+
+void scd30_set_temp_offset_c(uint16_t value)
+{
+  int16_t error = sensor.setTemperatureOffset(value);
+  check_error(error);
+  temp_offset_c = value;
+}
+
+uint16_t scd30_get_temp_offset_c()
+{
+  int16_t error = sensor.getTemperatureOffset(temp_offset_c);
+  check_error(error);
+
+  return temp_offset_c;
 }
 
 void scd30_start()
@@ -130,7 +146,7 @@ void scd30_start()
   error = sensor.activateAutoCalibration(AUTOMATIC_CALIBRATION);
   check_error(error);
 
-  error = sensor.setTemperatureOffset(TEMP_OFFSET_C);
+  error = sensor.setTemperatureOffset(temp_offset_c);
   check_error(error);
 
   error = sensor.startPeriodicMeasurement(AMBIENT_PRESSURE_MBAR);

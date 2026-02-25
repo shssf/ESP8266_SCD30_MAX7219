@@ -115,7 +115,7 @@ bool MAX72X_tick()
 void MAX72X_start()
 {
   g_parola.begin();
-  g_parola.setIntensity(0); // 0..15
+  g_parola.setIntensity(1); // 0..15
   g_parola.setInvert(false);
   g_parola.setCharSpacing(1);
   g_parola.displayClear();

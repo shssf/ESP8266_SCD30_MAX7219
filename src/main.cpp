@@ -16,12 +16,7 @@ void setup()
 
   wifi_start();
   mdns_start();
-
-  /* Register UI routes */
-
-  // ui_register_hw502_routes();
   http_start();
-
   MAX72X_start();
   scd30_start();
 }
