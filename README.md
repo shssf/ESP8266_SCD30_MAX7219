@@ -45,3 +45,7 @@ Schematic files:
 ## Note
 
 The original wiring and component description is based on `data/doc.md`.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.
