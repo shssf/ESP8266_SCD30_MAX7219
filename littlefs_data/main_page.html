@@ -9,88 +9,59 @@
 </head>
 
 <body>
+    <div class="container">
     <h1 id="title">Wemos D1 mini + SCD30</h1>
 
     <div class="card">
-        <table>
-            <tr>
-                <th>Action</th>
-                <th>Path</th>
-                <th>Description</th>
-            </tr>
-            <tr>
-                <td><button class="btn btn-primary" type="button" onclick="location.href='/scd30'">SCD30</button></td>
-                <td class="mono"><a href="/scd30">/scd30</a></td>
-                <td>Temp, Hum, CO2</td>
-            </tr>
-            <tr>
-                <td><button class="btn btn-primary" type="button" onclick="location.href='/ota'">Web OTA</button></td>
-                <td class="mono"><a href="/ota">/ota</a></td>
-                <td>OTA page for firmware and filesystem upload.</td>
-            </tr>
-            <tr>
-                <td>
-                    <form method="POST" action="/reset"><button class="btn btn-accent" type="submit">RESET WiFi</button>
-                    </form>
-                </td>
-                <td class="mono">/reset</td>
-                <td>Erase saved WiFi credentials and reboot the device.</td>
-            </tr>
-        </table>
+        <div class="section-title">Navigation</div>
+        <div class="action-row">
+            <button class="btn btn-primary" type="button" onclick="location.href='/scd30'">SCD30</button>
+            <button class="btn btn-primary" type="button" onclick="location.href='/ota'">Web OTA</button>
+        </div>
+        <p class="hint">Links: <a class="mono" href="/api/main">/api/main</a></p>
     </div>
+
+    <div class="card">
+        <div class="section-title">Device actions</div>
+        <div class="action-row">
+            <button id="rebootBtn" class="btn btn-accent" type="button">Reboot Device</button>
+            <form method="POST" action="/reset">
+                <button class="btn btn-default" type="submit">Clear WiFi Pass</button>
+            </form>
+        </div>
+        <p id="mainActionMsg" class="hint">Use reboot to apply firmware/filesystem updates.</p>
+    </div>
+
+    <div class="sep"></div>
 
     <div class="columns">
         <div class="card">
-            <div class="hint">Hostname</div>
-            <div id="hostname" class="mono">--</div>
+            <div class="section-title">Network / Addressing</div>
+            <table>
+                <tr><td>Hostname</td><td id="hostname" class="mono">--</td></tr>
+                <tr><td>IP</td><td id="ip" class="mono">--</td></tr>
+                <tr><td>MAC</td><td id="mac" class="mono">--</td></tr>
+                <tr><td>WiFi</td><td id="wifi">--</td></tr>
+            </table>
         </div>
         <div class="card">
-            <div class="hint">IP</div>
-            <div id="ip" class="mono">--</div>
+            <div class="section-title">Hardware info</div>
+            <table>
+                <tr><td>Chip ID</td><td id="chipId" class="mono">--</td></tr>
+                <tr><td>CPU freq</td><td id="cpu" class="mono">--</td></tr>
+                <tr><td>Flash size</td><td id="flash" class="mono">--</td></tr>
+                <tr><td>Uptime</td><td id="uptime" class="mono">--</td></tr>
+            </table>
         </div>
         <div class="card">
-            <div class="hint">MAC</div>
-            <div id="mac" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">WiFi</div>
-            <div id="wifi">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Chip ID</div>
-            <div id="chipId" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">CPU freq</div>
-            <div id="cpu" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Flash size</div>
-            <div id="flash" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Uptime</div>
-            <div id="uptime" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Free heap</div>
-            <div id="freeHeap" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Heap fragmentation</div>
-            <div id="heapFrag" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Max free block</div>
-            <div id="maxFreeBlock" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">LittleFS used / total</div>
-            <div id="fsUsage" class="mono">--</div>
-        </div>
-        <div class="card">
-            <div class="hint">Last reset reason</div>
-            <div id="resetReason">--</div>
+            <div class="section-title">System health</div>
+            <table>
+                <tr><td>Free heap</td><td id="freeHeap" class="mono">--</td></tr>
+                <tr><td>Heap fragmentation</td><td id="heapFrag" class="mono">--</td></tr>
+                <tr><td>Max free block</td><td id="maxFreeBlock" class="mono">--</td></tr>
+                <tr><td>LittleFS used / total</td><td id="fsUsage" class="mono">--</td></tr>
+                <tr><td>Last reset reason</td><td id="resetReason">--</td></tr>
+            </table>
         </div>
     </div>
 
@@ -110,6 +81,8 @@
             var maxFreeBlock = document.getElementById('maxFreeBlock');
             var fsUsage = document.getElementById('fsUsage');
             var resetReason = document.getElementById('resetReason');
+            var rebootBtn = document.getElementById('rebootBtn');
+            var mainActionMsg = document.getElementById('mainActionMsg');
 
             function fill(data) {
                 title.textContent = 'Wemos D1 mini + SCD30 (built ' + (data.build || '--') + ')';
@@ -139,10 +112,38 @@
                 }
             }
 
+            rebootBtn.addEventListener('click', function () {
+                rebootBtn.disabled = true;
+                mainActionMsg.textContent = 'Sending reboot command ...';
+                fetch('/reboot', { method: 'POST' })
+                    .then(function (resp) {
+                        return resp.text().then(function (txt) {
+                            return { status: resp.status, text: txt };
+                        });
+                    })
+                    .then(function (res) {
+                        rebootBtn.disabled = false;
+                        if (res.status === 200) {
+                            mainActionMsg.textContent = res.text || 'Rebooting...';
+                            return;
+                        }
+                        if (res.status === 401) {
+                            mainActionMsg.textContent = 'Auth required for reboot. Open /ota and authenticate first.';
+                            return;
+                        }
+                        mainActionMsg.textContent = 'Reboot failed: HTTP ' + res.status + ' ' + (res.text || '');
+                    })
+                    .catch(function () {
+                        rebootBtn.disabled = false;
+                        mainActionMsg.textContent = 'Network error during reboot command';
+                    });
+            });
+
             refresh();
             setInterval(refresh, 2000);
         })();
     </script>
+    </div>
 </body>
 
 </html>

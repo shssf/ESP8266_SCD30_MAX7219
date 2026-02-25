@@ -9,14 +9,15 @@
 </head>
 
 <body>
+    <div class="container">
     <h1>Firmware update</h1>
 
-    <div>
+    <div class="action-row">
         <form method="GET" action="/"><button class="btn btn-default" type="submit">Back</button></form>
-    </div>
-    <div>
         <button id="rebootBtn" class="btn btn-accent" type="button">Restart controller</button>
     </div>
+
+    <div class="sep"></div>
 
     <div class="card">
         <table>
@@ -34,7 +35,7 @@
     <div class="columns">
         <div class="card panel">
             <h2>Firmware image</h2>
-            <input id="fwFileInput" type="file" name="update" accept=".bin,application/octet-stream" style="color:#ddd">
+            <input id="fwFileInput" class="file-input" type="file" name="update" accept=".bin,application/octet-stream">
             <div class="meta">
                 <div class="hint">File: <span id="fwFileName" class="mono">none</span></div>
                 <div class="hint">Size: <span id="fwFileSize" class="mono">0 B</span></div>
@@ -45,7 +46,7 @@
 
         <div class="card panel">
             <h2>Filesystem image</h2>
-            <input id="fsFileInput" type="file" name="update" accept=".bin,application/octet-stream" style="color:#ddd">
+            <input id="fsFileInput" class="file-input" type="file" name="update" accept=".bin,application/octet-stream">
             <div class="meta">
                 <div class="hint">File: <span id="fsFileName" class="mono">none</span></div>
                 <div class="hint">Size: <span id="fsFileSize" class="mono">0 B</span></div>
@@ -56,6 +57,7 @@
     </div>
 
     <div class="card">
+        <div class="section-title">Upload</div>
         <p class="hint">Naming rules: firmware must look like <span class="mono">firmware*.bin</span>; filesystem must
             contain <span class="mono">littlefs/spiffs/fs</span> and end with <span class="mono">.bin</span>.</p>
         <p class="hint">Auth: user <span class="mono">admin</span>, password <span class="mono">SETUP_AP_PASS</span>.
@@ -264,6 +266,7 @@
             setStatus('Ready', 'status-ready', 'Idle');
         })();
     </script>
+    </div>
 </body>
 
 </html>
