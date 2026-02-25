@@ -1,17 +1,47 @@
-# ESP8266_SCD30_MAX7219
-ESP8266 + SCD30 + MAX7219
+# ESP8266 SCD30 MAX7219
 
-## SCD30 temperature offset without reflashing
+Project based on **Wemos D1 mini (ESP8266)** for measuring **CO₂ / temperature / humidity** from the **SCD30** sensor and displaying values on a **MAX7219 8x32 LED matrix**.
 
-- Open `/scd30` page in browser.
-- In **Temperature offset** block set value in centi-degrees (`100 = 1.00°C`).
-- Press **Apply** to send new value immediately to SCD30.
+## What this project does
 
-API:
+- Reads data from `SCD30` (CO₂, temperature, humidity).
+- Shows values on `MAX7219 8x32`.
+- Works over Wi-Fi and supports web interface/OTA (implemented in the project code).
 
-- Read current offset: `/api/scd30/temp_offset`
-- Set new offset: `/api/scd30/temp_offset?value=530`
+## Components
 
-Formula:
+- `Wemos D1 mini (ESP8266)`
+- `SCD30` (CO₂ + Temperature + Humidity)
+- `MAX7219 8x32 LED Matrix`
 
-- `offset_centi = (temperature_scd30 - reference_temperature) * 100`
+## Wiring
+
+### MAX7219 8x32 → Wemos D1 mini
+
+- `Vcc` → `5V`
+- `Gnd` → `G`
+- `Din` → `D7`
+- `CS` → `D0`
+- `CLK` → `D5`
+
+### SCD30 → Wemos D1 mini
+
+- `Vin` → `3V3`
+- `GND` → `G`
+- `SCL` → `D1`
+- `SDA` → `D2`
+
+## Schematic (visual)
+
+![Project circuit schematic](data/circuit_image.svg)
+
+## Schematic files
+
+Schematic files:
+
+- `data/circuit_image.svg`
+- `data/ESP8266_SCD30_MAX7219.ckt`
+
+## Note
+
+The original wiring and component description is based on `data/doc.md`.
