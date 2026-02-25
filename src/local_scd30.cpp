@@ -11,8 +11,7 @@ static float temperature = -1.0f;
 static float humidity = -1.0f;
 static uint16_t temp_offset_c = 530; // temperature correction for -5.3 C
 
-#define MEASUREMENT_INTERVAL  30  // in seconds
-#define TEMP_OFFSET_C         530 // centi-degrees, sensor subtracts this from measured temperature (31.7 -> 26.4)
+#define MEASUREMENT_INTERVAL  30 // in seconds
 #define AMBIENT_PRESSURE_MBAR 1010
 #define AUTOMATIC_CALIBRATION 0
 
@@ -102,7 +101,7 @@ void scd30_get_values()
   else
   {
     // apply temperature offset
-    // temperature -= float(TEMP_OFFSET_C) / 100.0f;
+    // temperature -= float(temp_offset_c) / 100.0f;
   }
 }
 
