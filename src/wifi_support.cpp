@@ -89,6 +89,7 @@ void wifi_start()
   WiFi.persistent(true);
   WiFi.setAutoConnect(true);
   WiFi.setAutoReconnect(true);
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
   WiFi.hostname(get_hostname());
 
   g_wm.setConnectTimeout(CONNECT_TIMEOUT_S);

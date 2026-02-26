@@ -1,64 +1,79 @@
+/* ============================================================================
+   STYLE v4 — Clean, Unified, Expressive-But-Professional
+   Decisions (confirmed by user):
+     • Gold focus line: ~1px + subtle glow (elegant, visible)
+     • Hover: button lifts (-2px), gold ring lights up
+     • Active: button presses in (+1px), shadow reduces
+     • Cards: Variant K1 — thin calm rim + soft inner glow (G1: accent-tinted)
+     • Keep existing HTML class names: .btn-default / .btn-primary / .btn-accent
+   Notes:
+     • Comments only in English, per your preference
+     • Palette reduced; consistent shadows; single font stacks
+   ============================================================================ */
+
 :root {
-  /* palette */
-  --bg: hsl(225 12% 6%);
-  --panel: hsl(220 14% 10%);
-  --panel-2: hsl(220 14% 12%);
-  --panel-3: hsl(220 14% 15%);
-  --line: hsl(220 16% 20% / 0.62);
-  --line-strong: hsl(220 16% 18% / 0.78);
+  /* Core palette (reduced) */
+  --bg: #141821; /* page background */
+  --surface: #1e232c; /* base panels/cards */
+  --surface-2: #232933; /* slightly higher surface (controls) */
+  --line: rgba(255, 255, 255, 0.1); /* default borders */
 
-  --text: hsl(220 30% 92%);
-  --text-muted: hsl(220 15% 75%);
-  --text-mono: hsl(220 70% 83%);
-  --text-inverse: #fff;
+  --text: #e9eaee; /* primary text */
+  --muted: #a5abb4; /* secondary text */
+  --link: #ff477e; /* accent link */
 
-  --accent: 342 72% 56%;
-  --accent-deep: 336 78% 52%;
-  --danger: 350 90% 58%;
-  --danger-deep: 350 70% 18%;
+  --accent: #ff477e; /* primary accent (pink) */
+  --accent-2: #ff6f9c; /* accent highlight */
+  --danger: #e34a5a; /* danger base */
+  --danger-2: #ff5f6d; /* danger highlight */
 
-  --ok: 152 64% 48%;
-  --warn: 42 90% 60%;
-  --bad: 0 85% 64%;
+  --gold: #f1c76b; /* gold ring */
 
-  --shadow-card: 0 6px 18px hsl(225 18% 2% / 0.5);
-  --shadow-btn: 0 6px 14px hsl(225 18% 2% / 0.55);
-  --shadow-btn-hover: 0 8px 16px hsl(225 18% 2% / 0.6);
+  /* Elevation system — consistent everywhere */
+  --elev-0: none;
+  --elev-1: 0 3px 10px rgba(0, 0, 0, 0.35);
+  --elev-2: 0 9px 26px rgba(0, 0, 0, 0.55);
 
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
-  --radius-pill: 999px;
-
-  --space-1: 8px;
-  --space-2: 10px;
-  --space-3: 12px;
+  /* Geometry & spacing */
+  --r-xs: 8px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+  --sp-1: 8px;
+  --sp-2: 10px;
+  --sp-3: 12px;
+  --sp-4: 16px;
   --gap-1: 14px;
   --gap-2: 18px;
   --gap-3: 24px;
-
   --control-h: 42px;
-  --progress-h: 16px;
 
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  /* Typography */
+  --font:
+    system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Arial, sans-serif;
+  --mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+/* ---- Base ---------------------------------------------------------------- */
 * {
   box-sizing: border-box;
 }
-
+html,
+body {
+  height: 100%;
+}
 body {
   margin: 0;
-  font-family: var(--font-sans);
-  color: var(--text);
   background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
 button,
 input,
 select,
@@ -67,7 +82,6 @@ label {
   font: inherit;
   color: inherit;
 }
-
 .container {
   max-width: 1060px;
   margin: var(--gap-3) auto;
@@ -78,39 +92,31 @@ h1 {
   margin: 0 0 var(--gap-1);
   font-size: 20px;
 }
-
 h2 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--sp-2);
   font-size: 17px;
+  color: var(--muted);
 }
 
+/* ---- Cards (K1 + G1) ----------------------------------------------------- */
 .card {
   position: relative;
   margin-bottom: var(--gap-1);
   padding: var(--gap-1);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, hsl(0 0% 100% / 0.02), transparent),
-    radial-gradient(
-      600px 300px at 100% -50%,
-      hsl(var(--accent-deep) / 0.05),
-      transparent 60%
-    ),
-    var(--panel);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--elev-1);
 }
-
+/* Subtle accent-tinted rim + soft inner glow, harmonized with separator */
 .card::before {
   content: "";
   position: absolute;
   inset: -1px;
   pointer-events: none;
-  border-radius: var(--radius);
-  border: 1px solid hsl(var(--accent-deep) / 0.16);
-  box-shadow:
-    0 0 0.8rem hsl(var(--accent-deep) / 0.22),
-    0 0 0.25rem hsl(var(--accent) / 0.3) inset;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 71, 126, 0.18); /* pinkish, low alpha */
+  box-shadow: inset 0 0 0.8rem rgba(255, 71, 126, 0.16); /* soft inner glow (G1) */
 }
 
 .columns {
@@ -118,312 +124,254 @@ h2 {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--gap-1);
 }
-
 .action-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--sp-2);
 }
-
 .action-row form {
   margin: 0;
 }
 
+/* Separator – stronger accent line; cards echo it softly */
 .sep {
   margin: var(--gap-2) 0;
   height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
-    hsl(var(--accent-deep) / 0.45),
+    rgba(255, 71, 126, 0.5),
     transparent
   );
 }
 
 .meta {
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-2);
+  margin: var(--sp-2) 0;
+  color: var(--muted);
 }
 
+/* ---- Tables -------------------------------------------------------------- */
 table {
   width: 100%;
   border-collapse: collapse;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
+  border-radius: var(--r-sm);
+  background: #1b2028;
 }
-
 th,
 td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--line-strong);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   text-align: left;
 }
-
 th {
-  color: var(--text-muted);
+  color: var(--muted);
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 0.08em;
 }
-
 tr:last-child td {
   border-bottom: none;
 }
 
-/* buttons: base + 3 unified variants */
-.btn {
+/* ---- Buttons (keep your classes: .btn-default / .btn-primary / .btn-accent) */
+:root {
+  --btn-pad-y: 10px;
+  --btn-pad-x: 18px;
+}
+
+/* Base */
+.btn,
+button,
+input[type="button"],
+input[type="submit"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.55rem;
   min-height: var(--control-h);
-  margin: 0;
-  padding: var(--space-2) var(--gap-1);
+  padding: var(--btn-pad-y) var(--btn-pad-x);
+  border-radius: var(--r-md);
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  background: var(--surface-2);
   color: var(--text);
-  background: linear-gradient(180deg, hsl(220 14% 18%), var(--panel-3));
-  box-shadow: var(--shadow-btn);
-  text-shadow: 0 0 2px hsl(0 0% 0% / 0.45);
-  cursor: pointer;
+  font: 700 0.95rem/1 var(--font);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: var(--elev-1);
   transition:
-    filter 0.12s ease,
-    transform 0.06s ease,
-    box-shadow 0.12s ease,
-    opacity 0.15s ease;
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
+  cursor: pointer;
 }
 
-.btn:hover:not(:disabled) {
-  filter: brightness(1.06);
-  box-shadow: var(--shadow-btn-hover);
+/* Unified HOVER (lift -2px) + gold 1px halo */
+.btn:hover,
+.btn:focus-visible,
+button:hover,
+button:focus-visible {
+  background: #2a303a; /* slight color shift */
+  border-color: rgba(241, 199, 107, 0.9);
+  box-shadow:
+    0 0 0 1px var(--gold),
+    /* 1px gold ring */ 0 0 12px rgba(241, 199, 107, 0.35),
+    /* soft gold glow */ var(--elev-2);
+  outline: none;
+  transform: translateY(-2px);
+  filter: saturate(1.03);
 }
 
-.btn:active:not(:disabled) {
-  filter: brightness(1.08);
+/* Unified ACTIVE (press in + shallow shadow) */
+.btn:active,
+button:active {
   transform: translateY(1px);
+  box-shadow: var(--elev-0);
+  filter: brightness(1);
 }
 
-.btn:focus-visible {
-  outline: 2px solid hsl(var(--accent-2) / 0.85);
-  outline-offset: 2px;
-}
-
-.btn:disabled {
-  background: linear-gradient(160deg, #2a2f3a, #20242d);
-  border-color: hsl(220 16% 32% / 0.7);
-  opacity: 0.45;
+/* Disabled */
+.btn:disabled,
+button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: var(--elev-0);
 }
 
-/* 1) system button */
+/* Variants mapped to your existing HTML */
+/* System/back */
 .btn-default {
-  border-color: hsl(var(--accent) / 0.4);
-  color: hsl(var(--accent));
   background: transparent;
-  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.btn-default:hover,
+.btn-default:focus-visible {
+  background: rgba(255, 255, 255, 0.04);
 }
 
-/* 2) danger action */
-.btn-accent {
-  border-color: hsl(var(--danger) / 0.68);
-  color: var(--text-inverse);
-  background: linear-gradient(
-    180deg,
-    hsl(var(--danger) / 0.32),
-    hsl(var(--danger-deep) / 0.82)
-  );
-  box-shadow:
-    inset 0 0 0.7rem hsl(var(--danger) / 0.24),
-    0 0 0.55rem hsl(var(--danger) / 0.14);
-}
-
-.btn-accent:hover:not(:disabled) {
-  border-color: hsl(var(--danger) / 0.86);
-  box-shadow:
-    inset 0 0 0.8rem hsl(var(--danger) / 0.3),
-    0 0 0.8rem hsl(var(--danger) / 0.22),
-    0 8px 16px hsl(225 18% 2% / 0.6);
-  filter: brightness(1.03);
-}
-
-.btn-accent:active:not(:disabled) {
-  filter: brightness(1.06);
-}
-
-/* 3) primary action */
+/* Primary (navigation / regular actions) – neutral fill with subtle accent tint */
 .btn-primary {
-  border-color: hsl(var(--accent) / 0.5);
-  color: var(--text-inverse);
-  background: linear-gradient(
-    180deg,
-    hsl(var(--accent) / 0.9),
-    hsl(var(--accent-deep) / 0.88)
-  );
-  box-shadow:
-    0 0 0.5rem hsl(var(--accent-deep) / 0.22),
-    0 6px 14px hsl(225 18% 2% / 0.55);
+  background: linear-gradient(180deg, #242a34, var(--surface-2));
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text);
 }
 
-.btn-primary:hover:not(:disabled) {
-  filter: brightness(1.1);
+/* Accent (dangerous/strong actions) */
+.btn-accent {
+  background: linear-gradient(180deg, var(--danger-2), var(--danger));
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* ---- Status pills -------------------------------------------------------- */
 .status-pill {
   display: inline-block;
-  padding: 4px var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--panel-2);
+  padding: 4px var(--sp-2);
+  border-radius: var(--r-pill);
+  background: #1b2028;
   border: 1px solid var(--line);
   color: var(--text);
   font-weight: 600;
 }
-
 .status-ready {
-  border-color: hsl(var(--ok) / 0.35);
-  box-shadow: 0 0 0.5rem hsl(var(--ok) / 0.22) inset;
+  border-color: rgba(37, 194, 129, 0.35);
+  box-shadow: inset 0 0 0.45rem rgba(37, 194, 129, 0.2);
 }
-
 .status-progress {
-  border-color: hsl(var(--warn) / 0.35);
-  box-shadow: 0 0 0.5rem hsl(var(--warn) / 0.22) inset;
+  border-color: rgba(241, 199, 107, 0.35);
+  box-shadow: inset 0 0 0.45rem rgba(241, 199, 107, 0.2);
 }
-
 .status-success {
-  border-color: hsl(var(--ok) / 0.45);
-  box-shadow: 0 0 0.55rem hsl(var(--ok) / 0.24) inset;
+  border-color: rgba(37, 194, 129, 0.45);
+  box-shadow: inset 0 0 0.5rem rgba(37, 194, 129, 0.24);
 }
-
 .status-error {
-  border-color: hsl(var(--bad) / 0.45);
-  box-shadow: 0 0 0.55rem hsl(var(--bad) / 0.24) inset;
+  border-color: rgba(227, 74, 90, 0.45);
+  box-shadow: inset 0 0 0.5rem rgba(227, 74, 90, 0.24);
 }
-
 .status-auth {
-  border-color: hsl(var(--warn) / 0.45);
-  box-shadow: 0 0 0.55rem hsl(var(--warn) / 0.24) inset;
+  border-color: rgba(241, 199, 107, 0.45);
+  box-shadow: inset 0 0 0.5rem rgba(241, 199, 107, 0.24);
 }
 
+/* ---- Typographic helpers ------------------------------------------------- */
 .mono {
-  font-family: var(--font-mono);
-  color: var(--text-mono);
+  font-family: var(--mono);
+  color: #cfe1ff;
 }
-
 .hint {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--muted);
 }
-
 .section-title {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--sp-2);
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .metric {
   display: flex;
   align-items: baseline;
-  gap: var(--space-1);
+  gap: var(--sp-1);
 }
-
 .metric .value {
-  font: 600 36px/1 var(--font-mono);
+  font: 600 36px/1 var(--mono);
   font-variant-numeric: tabular-nums;
 }
-
 .metric .unit {
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 6px var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--panel-2);
+/* ---- File input & progress ---------------------------------------------- */
+.file-input {
+  width: 100%;
+  padding: var(--sp-1);
   border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  background: #1b2028;
+}
+.file-input::file-selector-button,
+.file-input::-webkit-file-upload-button {
+  margin-right: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
   color: var(--text);
-}
-
-.pill.ok {
-  border-color: hsl(var(--ok) / 0.35);
-  box-shadow: 0 0 0.5rem hsl(var(--ok) / 0.22) inset;
-}
-
-.pill.warn {
-  border-color: hsl(var(--warn) / 0.35);
-  box-shadow: 0 0 0.5rem hsl(var(--warn) / 0.22) inset;
-}
-
-.pill.bad {
-  border-color: hsl(var(--bad) / 0.35);
-  box-shadow: 0 0 0.5rem hsl(var(--bad) / 0.22) inset;
+  background: linear-gradient(180deg, #242a34, var(--surface-2));
+  box-shadow: var(--elev-1);
+  cursor: pointer;
 }
 
 .progress-title {
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--sp-1);
 }
-
 .progress-wrap {
-  height: var(--progress-h);
+  height: 16px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: hsl(220 14% 9%);
+  border-radius: var(--r-sm);
+  background: #171b23;
 }
-
 .progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(
-    90deg,
-    hsl(var(--accent)),
-    hsl(var(--accent-deep))
-  );
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: width 0.15s ease;
 }
 
-canvas {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--panel-2), hsl(220 14% 9%));
-}
-
+/* ---- Links --------------------------------------------------------------- */
 a {
-  color: hsl(var(--accent) / 0.95);
+  color: var(--link);
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
-}
-
-.file-input {
-  width: 100%;
-  padding: var(--space-1);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  background: var(--panel-2);
-}
-
-.file-input::file-selector-button,
-.file-input::-webkit-file-upload-button {
-  margin-right: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xs);
-  color: var(--text);
-  background: linear-gradient(180deg, hsl(220 14% 18%), var(--panel-3));
-  box-shadow: 0 4px 10px hsl(225 18% 2% / 0.45);
-  cursor: pointer;
 }
