@@ -9,7 +9,7 @@ SensirionI2cScd30 sensor;
 static float co2 = -1.0f;
 static float temperature = -1.0f;
 static float humidity = -1.0f;
-static uint16_t temp_offset_c = 530; // temperature correction for -5.3 C
+static uint16_t temp_offset_c = 580; // temperature correction for -5.8 C
 
 #define MEASUREMENT_INTERVAL  30 // in seconds
 #define AMBIENT_PRESSURE_MBAR 1010
