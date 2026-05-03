@@ -124,6 +124,12 @@ void wifi_start()
   return;
 }
 
+void wifi_stop()
+{
+  WiFi.disconnect(false);
+  WiFi.mode(WIFI_OFF);
+}
+
 void wifi_tick()
 {
   static uint32_t next_retry_ms = 0;

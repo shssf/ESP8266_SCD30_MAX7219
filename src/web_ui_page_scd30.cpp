@@ -5,8 +5,31 @@
 
 #include "local_scd30.h"
 
+static bool api_heartbeat_started = false;
+static const uint32_t SCD30_API_HEARTBEAT_TIMEOUT_MS = 10UL * 60UL * 1000UL;
+static uint32_t api_last_request_ms = 0;
+
+bool ui_scd30_api_alive()
+{
+  if (!api_heartbeat_started)
+  {
+    return true;
+  }
+
+  const uint32_t request_age_ms = millis() - api_last_request_ms;
+  return request_age_ms <= SCD30_API_HEARTBEAT_TIMEOUT_MS;
+}
+
+void ui_scd30_api_heartbeat_stop()
+{
+  api_heartbeat_started = false;
+  api_last_request_ms = 0;
+}
+
 static void handleApiScd30(void)
 {
+  api_heartbeat_started = true;
+  api_last_request_ms = millis();
   http_send_header("Cache-Control", "no-store");
 
   char json[128];

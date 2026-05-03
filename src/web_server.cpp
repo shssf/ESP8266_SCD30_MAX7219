@@ -10,6 +10,7 @@
 static ESP8266WebServer s_server(80);
 static bool s_server_started = false;
 static bool s_fs_ready = false;
+static bool s_routes_registered = false;
 
 static bool check_update_auth()
 {
@@ -123,12 +124,25 @@ static void handle_reboot_post(void)
 
 void http_start(void)
 {
-  s_fs_ready = LittleFS.begin();
+  if (!s_fs_ready)
+  {
+    s_fs_ready = LittleFS.begin();
+  }
 
-  ui_register_main_routes();
-  ui_ota_routes();
-  ui_register_scd30_routes();
-  ui_register_css_routes();
+  if (!s_routes_registered)
+  {
+    ui_register_main_routes();
+    ui_ota_routes();
+    ui_register_scd30_routes();
+    ui_register_css_routes();
+    s_routes_registered = true;
+  }
+}
+
+void http_stop(void)
+{
+  s_server.stop();
+  s_server_started = false;
 }
 
 void http_tick(void)
@@ -146,8 +160,7 @@ void http_tick(void)
   {
     if (s_server_started)
     {
-      s_server.stop();
-      s_server_started = false;
+      http_stop();
     }
   }
 }

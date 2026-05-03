@@ -72,6 +72,12 @@ void mdns_start()
   }
 }
 
+void mdns_stop()
+{
+  MDNS.end();
+  Serial.printf("mDNS responder stopped\n");
+}
+
 void mdns_tick()
 {
   if (wifi_is_connected())
@@ -93,8 +99,7 @@ void mdns_tick()
   {
     if (MDNS.isRunning())
     {
-      MDNS.end();
-      Serial.printf("mDNS responder stopped\n");
+      mdns_stop();
     }
   }
 }

@@ -3,6 +3,7 @@
 #include <pgmspace.h>
 
 void http_start(void);
+void http_stop(void);
 void http_tick(void);
 
 typedef void (*HttpHandlerFn)(void); // std::function<void(void)>
