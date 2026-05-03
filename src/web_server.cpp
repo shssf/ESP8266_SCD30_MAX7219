@@ -2,6 +2,7 @@
 #include <LittleFS.h>
 #include <Updater.h>
 
+#include "local_diag.h"
 #include "web_css.h"
 #include "web_server.h"
 #include "web_ui_pages.h"
@@ -48,21 +49,21 @@ static void handle_updatefw_upload(void)
     const size_t max_sketch_space = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
     if (!Update.begin(max_sketch_space, U_FLASH))
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
     if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (!Update.end(true))
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
 }
@@ -91,21 +92,21 @@ static void handle_updatefs_upload(void)
   {
     if (!Update.begin((size_t)0xFFFFFFFF, U_FS))
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
     if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (!Update.end(true))
     {
-      Update.printError(Serial);
+      Update.printError(Diag);
     }
   }
 }

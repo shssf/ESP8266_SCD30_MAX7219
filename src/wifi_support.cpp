@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h> // "WiFiManager by tzapu"
 
+#include "local_diag.h"
 #include "wifi_support.h"
 
 static WiFiManager g_wm;
@@ -49,38 +50,38 @@ static const char* get_phy()
 
 static void dump_wifi()
 {
-  Serial.printf("\n==== WI-FI service ====\n");
+  Diag.printf("\n==== WI-FI service ====\n");
 
-  Serial.printf("Hostname: %s\n", get_hostname());
-  Serial.printf("Interface mode: %d (0=Off,1=STA,2=AP,3=AP+STA)\n", WiFi.getMode());
-  Serial.printf("Connection state: %d, SSID: %s\n", wifi_is_connected(), WiFi.SSID().c_str());
+  Diag.printf("Hostname: %s\n", get_hostname());
+  Diag.printf("Interface mode: %d (0=Off,1=STA,2=AP,3=AP+STA)\n", WiFi.getMode());
+  Diag.printf("Connection state: %d, SSID: %s\n", wifi_is_connected(), WiFi.SSID().c_str());
 
-  Serial.printf("Channel: %d\n", WiFi.channel());
-  Serial.printf("Signal level (RSSI): %d dBm\n", WiFi.RSSI());
+  Diag.printf("Channel: %d\n", WiFi.channel());
+  Diag.printf("Signal level (RSSI): %d dBm\n", WiFi.RSSI());
 
-  Serial.printf("Physical layer (PHY): %s\n", get_phy());
+  Diag.printf("Physical layer (PHY): %s\n", get_phy());
 
   wifi_country_t country;
   if (wifi_get_country(&country))
   {
-    Serial.printf("Regulatory country: %.2s\n", country.cc);
-    Serial.printf("Channel range: %u..%u\n", country.schan, (country.schan + country.nchan - 1));
-    Serial.printf("Max TX power (policy): %u\n", country.policy);
+    Diag.printf("Regulatory country: %.2s\n", country.cc);
+    Diag.printf("Channel range: %u..%u\n", country.schan, (country.schan + country.nchan - 1));
+    Diag.printf("Max TX power (policy): %u\n", country.policy);
   }
   else
   {
-    Serial.printf("Regulatory country: (unavailable)\n");
+    Diag.printf("Regulatory country: (unavailable)\n");
   }
 
-  Serial.printf("IPv4 address: %s\n", WiFi.localIP().toString().c_str());
-  Serial.printf("Subnet mask: %s\n", WiFi.subnetMask().toString().c_str());
-  Serial.printf("Default gateway: %s\n", WiFi.gatewayIP().toString().c_str());
-  Serial.printf("DNS[0]: %s\n", WiFi.dnsIP(0).toString().c_str());
-  Serial.printf("DNS[1]: %s\n", WiFi.dnsIP(1).toString().c_str());
-  Serial.printf("AutoConnect: %d\n", WiFi.getAutoConnect());
-  Serial.printf("AutoReconnect: %d\n", WiFi.getAutoReconnect());
+  Diag.printf("IPv4 address: %s\n", WiFi.localIP().toString().c_str());
+  Diag.printf("Subnet mask: %s\n", WiFi.subnetMask().toString().c_str());
+  Diag.printf("Default gateway: %s\n", WiFi.gatewayIP().toString().c_str());
+  Diag.printf("DNS[0]: %s\n", WiFi.dnsIP(0).toString().c_str());
+  Diag.printf("DNS[1]: %s\n", WiFi.dnsIP(1).toString().c_str());
+  Diag.printf("AutoConnect: %d\n", WiFi.getAutoConnect());
+  Diag.printf("AutoReconnect: %d\n", WiFi.getAutoReconnect());
 
-  Serial.printf("==== End service details ====\n");
+  Diag.printf("==== End service details ====\n");
 }
 
 void wifi_start()
@@ -102,7 +103,7 @@ void wifi_start()
   }
   else
   {
-    Serial.printf("No saved Wi-Fi credentials. Starting setup portal \"%s\"...\n", SETUP_AP_NAME);
+    Diag.printf("No saved Wi-Fi credentials. Starting setup portal \"%s\"...\n", SETUP_AP_NAME);
     if (g_wm.startConfigPortal(SETUP_AP_NAME, SETUP_AP_PASS))
     {
       if (wifi_is_connected())
@@ -112,7 +113,7 @@ void wifi_start()
     }
     else
     {
-      Serial.printf("Setup portal failed or timed out. Continue without connection.\n");
+      Diag.printf("Setup portal failed or timed out. Continue without connection.\n");
     }
   }
 

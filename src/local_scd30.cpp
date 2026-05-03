@@ -2,6 +2,7 @@
 #include <SensirionI2cScd30.h>
 #include <Wire.h> // I2C controller
 
+#include "local_diag.h"
 #include "local_scd30.h"
 
 SensirionI2cScd30 sensor;
@@ -31,39 +32,39 @@ static void dump_scd30()
   uint16_t aux_val = 0;
 
   // HW Information dump
-  Serial.printf("\n==== SCD30 sensor details (CO2, Temp, Humid) ====\n");
+  Diag.printf("\n==== SCD30 sensor details (CO2, Temp, Humid) ====\n");
 
   uint8_t major = 0;
   uint8_t minor = 0;
   error = sensor.readFirmwareVersion(major, minor);
   check_error(error);
-  Serial.printf("SCD30 Firmware version: %u.%u\n", major, minor);
+  Diag.printf("SCD30 Firmware version: %u.%u\n", major, minor);
 
   error = sensor.getMeasurementInterval(aux_val);
   check_error(error);
-  Serial.printf("Measurement interval: %u s\n", aux_val);
+  Diag.printf("Measurement interval: %u s\n", aux_val);
 
   error = sensor.getDataReady(aux_val);
   check_error(error);
-  Serial.printf("DataReady status: %u\n", aux_val);
+  Diag.printf("DataReady status: %u\n", aux_val);
 
   error = sensor.getAutoCalibrationStatus(aux_val);
   check_error(error);
-  Serial.printf("Automatic calibration status (ASC): %u\n", aux_val);
+  Diag.printf("Automatic calibration status (ASC): %u\n", aux_val);
 
   error = sensor.getForceRecalibrationStatus(aux_val);
   check_error(error);
-  Serial.printf("The configured CO₂ reference concentration: %u ppm\n", aux_val);
+  Diag.printf("The configured CO₂ reference concentration: %u ppm\n", aux_val);
 
   error = sensor.getTemperatureOffset(aux_val);
   check_error(error);
-  Serial.printf("The configured temperature offset: %f C\n", float(aux_val) / 100.0f);
+  Diag.printf("The configured temperature offset: %f C\n", float(aux_val) / 100.0f);
 
   error = sensor.getAltitudeCompensation(aux_val);
   check_error(error);
-  Serial.printf("The configured altitude: %u m\n", aux_val);
+  Diag.printf("The configured altitude: %u m\n", aux_val);
 
-  Serial.printf("==== End sensor details ====\n");
+  Diag.printf("==== End sensor details ====\n");
 }
 
 bool scd30_is_data_ready()

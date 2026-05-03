@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "local_display_MAX72X.h"
+#include "local_diag.h"
 #include "local_scd30.h"
 #include "mdns_support.h"
 #include "web_server.h"
@@ -26,12 +27,12 @@ void network_stop()
 
 void network_restart()
 {
-  Serial.printf("Network watchcat:...");
+  Diag.printf("Network watchcat:...");
   network_stop();
-  Serial.printf(" network stoped...");
+  Diag.printf(" network stoped...");
   delay(NETWORK_RESTART_PAUSE_MS);
   network_start();
-  Serial.printf(" and started.\n");
+  Diag.printf(" and started.\n");
 }
 
 void network_watchcat_tick()
@@ -46,7 +47,7 @@ void network_watchcat_tick()
 
 void setup()
 {
-  Serial.begin(115200);
+  Diag.begin(115200);
   delay(50);
   network_start();
   MAX72X_start();
@@ -66,7 +67,7 @@ void loop()
 
     scd30_get_values();
     scd30_read_values(co2, temperature, humidity);
-    Serial.printf("co2: %f, temperature_raw: %f, humidity: %f\n", co2, temperature, humidity);
+    Diag.printf("co2: %f, temperature_raw: %f, humidity: %f\n", co2, temperature, humidity);
     MAX72X_print(co2, temperature, humidity);
   }
 
