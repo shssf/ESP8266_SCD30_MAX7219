@@ -5,7 +5,6 @@
 #include "local_scd30.h"
 #include "mdns_support.h"
 #include "web_server.h"
-#include "web_ui_pages.h"
 #include "wifi_support.h"
 
 static const uint32_t NETWORK_RESTART_PAUSE_MS = 500UL;
@@ -22,7 +21,6 @@ void network_stop()
   http_stop();
   mdns_stop();
   wifi_stop();
-  ui_scd30_api_heartbeat_stop();
 }
 
 void network_restart()
@@ -33,16 +31,6 @@ void network_restart()
   delay(NETWORK_RESTART_PAUSE_MS);
   network_start();
   Diag.printf(" and started.\n");
-}
-
-void network_watchcat_tick()
-{
-  if (ui_scd30_api_alive()) // treat network stack as alive if someone can request SCD30 data via API
-  {
-    return;
-  }
-
-  network_restart();
 }
 
 void setup()
@@ -73,5 +61,4 @@ void loop()
 
   MAX72X_tick();
   http_tick();
-  network_watchcat_tick();
 }
