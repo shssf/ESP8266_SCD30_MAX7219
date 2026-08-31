@@ -93,6 +93,7 @@ void wifi_start()
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
   WiFi.hostname(get_hostname());
 
+  g_wm.setConfigPortalBlocking(false);
   g_wm.setConnectTimeout(CONNECT_TIMEOUT_S);
   g_wm.setConfigPortalTimeout(CONFIG_PORTAL_TIMEOUT_S);
 
@@ -104,16 +105,10 @@ void wifi_start()
   else
   {
     Diag.printf("No saved Wi-Fi credentials. Starting setup portal \"%s\"...\n", SETUP_AP_NAME);
-    if (g_wm.startConfigPortal(SETUP_AP_NAME, SETUP_AP_PASS))
+    g_wm.startConfigPortal(SETUP_AP_NAME, SETUP_AP_PASS);
+    if (!g_wm.getConfigPortalActive())
     {
-      if (wifi_is_connected())
-      {
-        WiFi.hostname(get_hostname());
-      }
-    }
-    else
-    {
-      Diag.printf("Setup portal failed or timed out. Continue without connection.\n");
+      Diag.printf("Setup portal failed to start.\n");
     }
   }
 
@@ -134,6 +129,16 @@ void wifi_stop()
 void wifi_tick()
 {
   static uint32_t next_retry_ms = 0;
+
+  if (g_wm.getConfigPortalActive())
+  {
+    if (g_wm.process() && wifi_is_connected())
+    {
+      WiFi.hostname(get_hostname());
+      dump_wifi();
+    }
+    return;
+  }
 
   if (wifi_is_connected())
   {

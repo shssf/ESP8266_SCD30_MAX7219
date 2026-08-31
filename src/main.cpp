@@ -37,9 +37,9 @@ void setup()
 {
   Diag.begin(115200);
   delay(50);
-  network_start();
   MAX72X_start();
   scd30_start();
+  network_start();
 }
 
 void loop()
