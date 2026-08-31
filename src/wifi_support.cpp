@@ -127,7 +127,7 @@ void wifi_start()
 
 void wifi_stop()
 {
-  WiFi.disconnect(false);
+  WiFi.disconnect(true, false);
   WiFi.mode(WIFI_OFF);
 }
 
