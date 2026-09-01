@@ -1,33 +1,37 @@
 #include "local_display_MAX72X.h"
 #include <MD_MAX72XX.h>
 #include <MD_Parola.h>
+#include <math.h>
 
-#define CH_SP1          '\x10' // 1 blank column
-#define CH_CO2_K1       '\x11' // CO2 thousands: 1
-#define CH_CO2_K2       '\x12' // CO2 thousands: 2
-#define CH_CO2_K3       '\x13' // CO2 thousands: 3
-#define CH_CO2_K4       '\x14' // CO2 thousands: 4
-#define CH_CO2_K5       '\x15' // CO2 thousands: 5
-#define CH_CO2_OVERFLOW '\x16'
-#define CH_SP4          '\x17' // 4 blank columns
+// The module chain is addressed from physical right to left. Keeping the
+// zones on module boundaries gives each half of the display exactly 16 pixels.
+static constexpr uint8_t ZONE_METRIC = 0; // physical right half, modules 0..1
+static constexpr uint8_t ZONE_CO2 = 1;    // physical left half, modules 2..3
+
+static constexpr uint16_t METRIC_SCROLL_STEP_MS = 125; // 16 columns ~= 2 s
+
+#define CH_SP1          '\x10' // 1 blank column in the metric zone
+#define CH_UNIT_DEGC    '\x11' // 1 blank column + compact "degrees C" glyph
+#define CH_UNIT_PERCENT '\x12' // 1 blank column + compact percent glyph
 
 static MD_Parola g_parola(MD_MAX72XX::FC16_HW, D0, 4);
 
+static char g_co2_text[8];
+static char g_metric_text[8];
+// It starts as true so the first actual SCD30 measurement switches to
+// temperature. The startup placeholder does not affect this selector.
+static bool g_show_humidity = true;
+
 static const uint8_t SP1[] = {1, 0x00};
-static const uint8_t SP4[] = {4, 0x00, 0x00, 0x00, 0x00};
 
-// Compact one-column CO2 thousands indicator. A value of 1 is drawn as a
-// regular narrow "1"; 2..5 are encoded by that many pixels from the bottom.
-// Values above 5 use two vertically separated dots to indicate overflow.
-static const uint8_t CO2_K1[] = {1, 0b11111111};
-static const uint8_t CO2_K2[] = {1, 0b11000000};
-static const uint8_t CO2_K3[] = {1, 0b11100000};
-static const uint8_t CO2_K4[] = {1, 0b11110000};
-static const uint8_t CO2_K5[] = {1, 0b11111000};
-static const uint8_t CO2_OVERFLOW[] = {1, 0b00100100};
+// Both unit glyphs have width 5. Their first blank column separates the
+// value from the unit, so a normal value (11 columns) fills the 16-column
+// metric zone exactly.
+//
+// bit 7 is the bottom LED and bit 0 is the top LED.
+static const uint8_t UNIT_DEGC[] = {5, 0b00000000, 0b00000011, 0b00000011, 0b11111100, 0b10000100};
 
-static const char CO2_THOUSANDS_CHARS[] = {
-    CH_SP1, CH_CO2_K1, CH_CO2_K2, CH_CO2_K3, CH_CO2_K4, CH_CO2_K5, CH_CO2_OVERFLOW, CH_CO2_OVERFLOW, CH_CO2_OVERFLOW, CH_CO2_OVERFLOW};
+static const uint8_t UNIT_PERCENT[] = {5, 0b00000000, 0b00010011, 0b00001011, 0b01100100, 0b01100000};
 
 static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
     'F',
@@ -118,59 +122,124 @@ static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
     0b11111111,
 };
 
-// Format an invalid 10-column display block as right-aligned "-1".
-static void overflow_print(char* buf)
+static void format_co2(float co2)
 {
-  buf[0] = CH_SP4;
-  buf[1] = '-';
-  buf[2] = '1';
-  buf[3] = '\0';
+  if (isfinite(co2) && co2 >= 0.0f && co2 < 9999.5f)
+  {
+    const uint16_t co2_value = (uint16_t)(co2 + 0.5f);
+    snprintf(g_co2_text, sizeof(g_co2_text), "%04u", co2_value);
+  }
+  else
+  {
+    // Four normal-width dashes are easier to recognize than a compressed
+    // error indicator and retain the 15-column layout of the CO2 zone.
+    snprintf(g_co2_text, sizeof(g_co2_text), "----");
+  }
 }
 
-void MAX72X_print(float co2, float temp, float humidity)
+// Build a 16-column value:
+//   2 <gap> 3 . 4 <unit>
+// The decimal point separates the last two digits; the unit glyph begins with
+// its own blank column. This preserves readable full-width digits and leaves
+// room for degrees C or percent.
+static void format_metric_4_chars(const char* value, char unit)
 {
-  static char g_digits[16];
-  char co2_digits[8];
-  char temp_digits[8];
-  char humidity_digits[8];
+  g_metric_text[0] = value[0];
+  g_metric_text[1] = CH_SP1;
+  g_metric_text[2] = value[1];
+  g_metric_text[3] = value[2];
+  g_metric_text[4] = value[3];
+  g_metric_text[5] = unit;
+  g_metric_text[6] = '\0';
+}
 
-  // CO2 block: 0..9999 ppm, 10 columns; show -1 outside the valid range.
-  if (co2 >= 0.0f && co2 <= 9999.0f)
+static void format_metric_error(char unit)
+{
+  format_metric_4_chars("--.-", unit);
+}
+
+static void format_temperature(float temperature)
+{
+  if (!isfinite(temperature) || temperature < -9.9f || temperature > 99.9f)
   {
-    const int co2_value = (int)(co2 + 0.5f);
-    const int co2_thousands = co2_value / 1000;
-    const int co2_remainder = co2_value % 1000;
-    snprintf(co2_digits, sizeof(co2_digits), "%c%03d", CO2_THOUSANDS_CHARS[co2_thousands], co2_remainder);
+    format_metric_error(CH_UNIT_DEGC);
+    return;
+  }
+
+  char value[8];
+  snprintf(value, sizeof(value), "%04.1f", temperature);
+  format_metric_4_chars(value, CH_UNIT_DEGC);
+}
+
+static void format_humidity(float humidity)
+{
+  if (!isfinite(humidity) || humidity < 0.0f || humidity > 100.0f)
+  {
+    format_metric_error(CH_UNIT_PERCENT);
+    return;
+  }
+
+  // 100.0 would need five decimal characters. At the upper end of the
+  // physical humidity range, show an unambiguous integer 100% instead.
+  if (humidity >= 99.95f)
+  {
+    g_metric_text[0] = '1';
+    g_metric_text[1] = CH_SP1;
+    g_metric_text[2] = '0';
+    g_metric_text[3] = CH_SP1;
+    g_metric_text[4] = '0';
+    g_metric_text[5] = CH_UNIT_PERCENT;
+    g_metric_text[6] = '\0';
+    return;
+  }
+
+  char value[8];
+  snprintf(value, sizeof(value), "%04.1f", humidity);
+  format_metric_4_chars(value, CH_UNIT_PERCENT);
+}
+
+static void display_co2()
+{
+  g_parola.displayZoneText(ZONE_CO2, g_co2_text, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
+}
+
+static void display_metric_static()
+{
+  g_parola.displayZoneText(ZONE_METRIC, g_metric_text, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
+}
+
+static void scroll_metric_in()
+{
+  // PA_SCROLL_LEFT keeps the already-rendered metric in the zone buffer.
+  // Therefore the old page moves left while the next page enters from the
+  // right. A 16-column message at 125 ms per column takes about two seconds.
+  g_parola.displayZoneText(ZONE_METRIC, g_metric_text, PA_LEFT, METRIC_SCROLL_STEP_MS, 0, PA_SCROLL_LEFT, PA_NO_EFFECT);
+}
+
+void MAX72X_print(float co2, float temperature, float humidity)
+{
+  format_co2(co2);
+  display_co2();
+
+  g_show_humidity = !g_show_humidity;
+  // On an SCD30 read error all values are set to -1. Keep that from looking
+  // like a real -1.0 C measurement in the metric area.
+  if (!isfinite(co2) || co2 < 0.0f)
+  {
+    format_metric_error(g_show_humidity ? CH_UNIT_PERCENT : CH_UNIT_DEGC);
+  }
+  else if (g_show_humidity)
+  {
+    format_humidity(humidity);
   }
   else
   {
-    overflow_print(co2_digits);
+    format_temperature(temperature);
   }
 
-  // Temperature block: -9.9..99.9 C, 10 columns; show -1 outside the valid range.
-  if (temp >= -9.9f && temp <= 99.9f)
-  {
-    snprintf(temp_digits, sizeof(temp_digits), "%04.1f", temp);
-  }
-  else
-  {
-    overflow_print(temp_digits);
-  }
-
-  // Humidity block: 0..99.9 percent, 10 columns; show -1 outside the valid range.
-  if (humidity >= 0.0f && humidity <= 99.9f)
-  {
-    snprintf(humidity_digits, sizeof(humidity_digits), "%04.1f", humidity);
-  }
-  else
-  {
-    overflow_print(humidity_digits);
-  }
-
-  snprintf(g_digits, sizeof(g_digits), "%s%c%s%c%s", co2_digits, CH_SP1, temp_digits, CH_SP1, humidity_digits);
-  // Serial.print(g_digits);
-  g_parola.displayText(g_digits, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
-  g_parola.displayReset();
+  // This function is called only when SCD30 has a new measurement, so it is
+  // also the only place that starts a temperature/humidity transition.
+  scroll_metric_in();
 }
 
 bool MAX72X_tick()
@@ -180,21 +249,29 @@ bool MAX72X_tick()
 
 void MAX72X_start()
 {
-  g_parola.begin();
-  g_parola.setIntensity(1); // 0..15
+  g_show_humidity = true;
+  g_parola.begin(2);
+  // MD_MAX72XX numbers modules from the physical right end of the chain.
+  g_parola.setZone(ZONE_METRIC, 0, 1);
+  g_parola.setZone(ZONE_CO2, 2, 3);
+
+  g_parola.setIntensity(1); // 0..15; intentionally unchanged
   g_parola.setInvert(false);
-  g_parola.setCharSpacing(0);
   g_parola.displayClear();
-  g_parola.setFont(fontDigits3x8);
+
+  g_parola.setFont(ZONE_METRIC, fontDigits3x8);
+  g_parola.setFont(ZONE_CO2, fontDigits3x8);
+  g_parola.setCharSpacing(ZONE_METRIC, 0);
+  g_parola.setCharSpacing(ZONE_CO2, 1);
 
   g_parola.addChar(CH_SP1, SP1);
-  g_parola.addChar(CH_SP4, SP4);
-  g_parola.addChar(CH_CO2_K1, CO2_K1);
-  g_parola.addChar(CH_CO2_K2, CO2_K2);
-  g_parola.addChar(CH_CO2_K3, CO2_K3);
-  g_parola.addChar(CH_CO2_K4, CO2_K4);
-  g_parola.addChar(CH_CO2_K5, CO2_K5);
-  g_parola.addChar(CH_CO2_OVERFLOW, CO2_OVERFLOW);
+  g_parola.addChar(CH_UNIT_DEGC, UNIT_DEGC);
+  g_parola.addChar(CH_UNIT_PERCENT, UNIT_PERCENT);
 
-  MAX72X_print(-1.f, -1.f, -1.f);
+  // Show a static placeholder without changing the first real page: the
+  // first SCD30 measurement will show temperature, then humidity, and so on.
+  format_co2(-1.0f);
+  format_metric_error(CH_UNIT_DEGC);
+  display_co2();
+  display_metric_static();
 }
