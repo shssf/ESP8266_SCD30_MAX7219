@@ -11,7 +11,7 @@ static constexpr uint8_t ZONE_CO2 = 1;    // physical left half, modules 2..3
 static constexpr uint16_t METRIC_SCROLL_STEP_MS = 125; // 16 columns ~= 2 s
 
 #define CH_SP1          '\x10' // 1 blank column in the metric zone
-#define CH_UNIT_DEGC    '\x11' // 1 blank column + compact "degrees C" glyph
+#define CH_UNIT_DEGC    '\x11' // 1 blank column + lower-positioned C glyph
 #define CH_UNIT_PERCENT '\x12' // 1 blank column + compact percent glyph
 
 static MD_Parola g_parola(MD_MAX72XX::FC16_HW, D0, 4);
@@ -24,14 +24,14 @@ static bool g_show_humidity = true;
 
 static const uint8_t SP1[] = {1, 0x00};
 
-// Both unit glyphs have width 5. Their first blank column separates the
-// value from the unit, so a normal value (11 columns) fills the 16-column
-// metric zone exactly.
+// Both unit glyphs have width 4. Their first blank column separates the
+// value from the unit. The leading CH_SP1 in every metric string becomes the
+// second blank column between the CO2 and metric halves of the display.
 //
 // bit 7 is the bottom LED and bit 0 is the top LED.
-static const uint8_t UNIT_DEGC[] = {5, 0b00000000, 0b00000011, 0b00000011, 0b11111100, 0b10000100};
+static const uint8_t UNIT_DEGC[] = {4, 0b00000000, 0b11110000, 0b10010011, 0b10010011};
 
-static const uint8_t UNIT_PERCENT[] = {5, 0b00000000, 0b00010011, 0b00001011, 0b01100100, 0b01100000};
+static const uint8_t UNIT_PERCENT[] = {4, 0b00000000, 0b01011000, 0b11111000, 0b11010000};
 
 static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
     'F',
@@ -138,19 +138,20 @@ static void format_co2(float co2)
 }
 
 // Build a 16-column value:
-//   2 <gap> 3 . 4 <unit>
+//   <center gap> 2 <gap> 3 . 4 <unit>
 // The decimal point separates the last two digits; the unit glyph begins with
-// its own blank column. This preserves readable full-width digits and leaves
-// room for degrees C or percent.
+// its own blank column. The leading gap makes a two-column separator between
+// the CO2 and metric halves of the display.
 static void format_metric_4_chars(const char* value, char unit)
 {
-  g_metric_text[0] = value[0];
-  g_metric_text[1] = CH_SP1;
-  g_metric_text[2] = value[1];
-  g_metric_text[3] = value[2];
-  g_metric_text[4] = value[3];
-  g_metric_text[5] = unit;
-  g_metric_text[6] = '\0';
+  g_metric_text[0] = CH_SP1;
+  g_metric_text[1] = value[0];
+  g_metric_text[2] = CH_SP1;
+  g_metric_text[3] = value[1];
+  g_metric_text[4] = value[2];
+  g_metric_text[5] = value[3];
+  g_metric_text[6] = unit;
+  g_metric_text[7] = '\0';
 }
 
 static void format_metric_error(char unit)
@@ -183,13 +184,14 @@ static void format_humidity(float humidity)
   // physical humidity range, show an unambiguous integer 100% instead.
   if (humidity >= 99.95f)
   {
-    g_metric_text[0] = '1';
-    g_metric_text[1] = CH_SP1;
-    g_metric_text[2] = '0';
-    g_metric_text[3] = CH_SP1;
-    g_metric_text[4] = '0';
-    g_metric_text[5] = CH_UNIT_PERCENT;
-    g_metric_text[6] = '\0';
+    g_metric_text[0] = CH_SP1;
+    g_metric_text[1] = '1';
+    g_metric_text[2] = CH_SP1;
+    g_metric_text[3] = '0';
+    g_metric_text[4] = CH_SP1;
+    g_metric_text[5] = '0';
+    g_metric_text[6] = CH_UNIT_PERCENT;
+    g_metric_text[7] = '\0';
     return;
   }
 
