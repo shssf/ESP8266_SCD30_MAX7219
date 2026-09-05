@@ -31,7 +31,7 @@ static const uint8_t SP1[] = {1, 0x00};
 // bit 7 is the bottom LED and bit 0 is the top LED.
 static const uint8_t UNIT_DEGC[] = {4, 0b00000000, 0b11110000, 0b10010011, 0b10010011};
 
-static const uint8_t UNIT_PERCENT[] = {4, 0b00000000, 0b01011000, 0b11111000, 0b11010000};
+static const uint8_t UNIT_PERCENT[] = {4, 0b00000000, 0b00100110, 0b11010110, 0b11001000};
 
 static const MD_MAX72XX::fontType_t fontDigits3x8[] PROGMEM = {
     'F',
